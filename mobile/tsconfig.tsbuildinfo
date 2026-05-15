@@ -1,0 +1,1 @@
+{"root":["./src/main.tsx","./src/router.tsx","./src/sw.ts","./src/api/client.ts","./src/components/areapicker.tsx","./src/components/networkbadge.tsx","./src/db/dexie.ts","./src/pages/home.tsx","./src/pages/inspection.tsx","./src/pages/login.tsx","./src/pages/queue.tsx","./src/stores/auth.ts","./src/sync/syncqueue.ts"],"version":"5.9.3"}
