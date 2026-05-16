@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     SEED_ADMIN_EMAIL: str = "admin@altcorp.com"
     SEED_ADMIN_PASSWORD: str = "admin123"
 
+    # SPTrans Olho Vivo — token obtido em https://www.sptrans.com.br/desenvolvedores/
+    OLHOVIVO_TOKEN: str = ""
+    OLHOVIVO_BASE_URL: str = "http://api.olhovivo.sptrans.com.br/v2.1"
+
     @property
     def cors_origins_list(self) -> List[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]

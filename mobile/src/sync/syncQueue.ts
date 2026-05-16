@@ -5,12 +5,47 @@ import { useAuth } from "../stores/auth";
 let running = false;
 const listeners = new Set<() => void>();
 const SYNC_TAG = "inspection-sync";
+/** Nome do Web Lock — compartilhado entre abas E service worker. */
+const SYNC_LOCK = "altcorp-inspection-sync";
+
+/** Upload de foto em rede móvel lenta precisa de timeout maior. */
+const PHOTO_UPLOAD_TIMEOUT = 90_000;
+/** POST da vistoria é JSON pequeno — timeout curto basta. */
+const INSPECTION_TIMEOUT = 30_000;
 
 type SyncRegistration = ServiceWorkerRegistration & {
   sync?: {
     register: (tag: string) => Promise<void>;
   };
 };
+
+/** Estado de progresso do envio, consumido pela tela Fila. */
+export type SyncProgress = {
+  active: boolean;
+  total: number;
+  completed: number;
+  label: string | null;
+  photo: number;
+  photoTotal: number;
+};
+
+let progress: SyncProgress = {
+  active: false,
+  total: 0,
+  completed: 0,
+  label: null,
+  photo: 0,
+  photoTotal: 0,
+};
+
+export function getSyncProgress(): SyncProgress {
+  return progress;
+}
+
+function setProgress(patch: Partial<SyncProgress>) {
+  progress = { ...progress, ...patch };
+  notify();
+}
 
 export function onSyncChange(fn: () => void) {
   listeners.add(fn);
@@ -29,6 +64,12 @@ function classifySyncFailure(err: any): { status: PendingInspection["status_sync
   }
 
   return { status: "failed", message };
+}
+
+/** Backoff exponencial: 5s, 10s, 20s, 40s, 80s, 160s — teto 5min. */
+function retryDelay(attempts: number): number {
+  const step = Math.min(Math.max(attempts, 1), 6);
+  return Math.min(5_000 * 2 ** (step - 1), 5 * 60_000);
 }
 
 async function persistRuntimeSettings() {
@@ -60,6 +101,24 @@ export async function scheduleBackgroundSync(): Promise<void> {
   registration.active?.postMessage({ type: "SYNC_PENDING_INSPECTIONS" });
 }
 
+/**
+ * Roda `run` sob o Web Lock global. Garante que página e service worker
+ * nunca enviem a mesma vistoria ao mesmo tempo (evita fotos duplicadas).
+ * `ifAvailable` evita empilhar passes quando outro contexto já sincroniza.
+ */
+async function withSyncLock(run: () => Promise<void>): Promise<void> {
+  const locks = navigator.locks;
+  if (!locks?.request) {
+    // Navegador sem Web Locks API — guarda apenas pela flag de aba.
+    await run();
+    return;
+  }
+  await locks.request(SYNC_LOCK, { ifAvailable: true }, async (lock) => {
+    if (!lock) return; // Outra aba / service worker já está sincronizando.
+    await run();
+  });
+}
+
 export async function syncNow(): Promise<void> {
   if (running) return;
   if (!navigator.onLine) return;
@@ -68,14 +127,32 @@ export async function syncNow(): Promise<void> {
   await persistRuntimeSettings();
   running = true;
   try {
-    const pending = await db.inspections
-      .where("status_sync").anyOf("pending", "failed").toArray();
-    pending.sort((left, right) => left.created_at - right.created_at);
+    await withSyncLock(runSyncPass);
+  } finally {
+    running = false;
+    notify();
+  }
+}
 
-    for (const item of pending) {
+async function runSyncPass(): Promise<void> {
+  const now = Date.now();
+  const queued = await db.inspections
+    .where("status_sync").anyOf("pending", "failed").toArray();
+  // Respeita o backoff: pula itens cujo próximo retry ainda não chegou.
+  const ready = queued
+    .filter((item) => !item.next_retry_at || item.next_retry_at <= now)
+    .sort((left, right) => left.created_at - right.created_at);
+
+  if (ready.length === 0) return;
+
+  setProgress({ active: true, total: ready.length, completed: 0, label: null, photo: 0, photoTotal: 0 });
+
+  try {
+    for (const item of ready) {
       try {
         await db.inspections.update(item.uuid, { status_sync: "syncing", last_error: undefined });
-        notify();
+        setProgress({ label: item.vehicle_plate, photo: 0, photoTotal: item.photos.length });
+
         const { data } = await api.post("/api/v1/inspections", {
           client_uuid: item.uuid,
           vehicle_plate: item.vehicle_plate,
@@ -84,32 +161,43 @@ export async function syncNow(): Promise<void> {
           notes: item.notes,
           damages: item.damages,
           performed_at: item.performed_at,
-        });
+        }, { timeout: INSPECTION_TIMEOUT });
         const inspectionId = data.id;
+
+        let uploaded = 0;
         for (const ph of item.photos) {
           const fd = new FormData();
           fd.append("file", new File([ph.blob], `${ph.id}.jpg`, { type: ph.content_type }));
           await api.post(`/api/v1/inspections/${inspectionId}/photos`, fd, {
             headers: { "Content-Type": "multipart/form-data" },
+            timeout: PHOTO_UPLOAD_TIMEOUT,
           });
+          uploaded += 1;
+          setProgress({ photo: uploaded });
         }
-        await db.inspections.update(item.uuid, { status_sync: "synced", server_id: inspectionId });
+        await db.inspections.update(item.uuid, {
+          status_sync: "synced",
+          server_id: inspectionId,
+          last_error: undefined,
+          next_retry_at: undefined,
+        });
       } catch (err: any) {
         const failure = classifySyncFailure(err);
+        const attempts = (item.attempts ?? 0) + 1;
         await db.inspections.update(item.uuid, {
           status_sync: failure.status,
-          attempts: (item.attempts ?? 0) + 1,
+          attempts,
           last_error: failure.message,
+          // "blocked" exige correção manual — não agenda retry automático.
+          next_retry_at: failure.status === "failed" ? Date.now() + retryDelay(attempts) : undefined,
         });
       } finally {
-        notify();
+        setProgress({ completed: progress.completed + 1 });
       }
     }
     await db.inspections.where("status_sync").equals("synced").delete();
-    notify();
   } finally {
-    running = false;
-    notify();
+    setProgress({ active: false, label: null, photo: 0, photoTotal: 0 });
   }
 }
 
@@ -123,9 +211,12 @@ export async function discardQueuedInspection(uuid: string): Promise<void> {
 }
 
 export async function requeueInspection(uuid: string): Promise<void> {
+  // Reenvio manual zera o backoff e o contador de tentativas.
   await db.inspections.update(uuid, {
     status_sync: "pending",
     last_error: undefined,
+    next_retry_at: undefined,
+    attempts: 0,
   });
   notify();
 }

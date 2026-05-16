@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
+import { CommandSearch } from "./CommandSearch";
 
 export function Layout() {
   return (
@@ -12,6 +13,7 @@ export function Layout() {
           <Outlet />
         </main>
       </div>
+      <CommandSearch />
     </div>
   );
 }

@@ -12,6 +12,8 @@ export interface PendingInspection {
   created_at: number;
   attempts: number;
   last_error?: string;
+  /** Epoch ms — não reenviar antes disso (retry com backoff). */
+  next_retry_at?: number;
   status_sync: "pending" | "syncing" | "synced" | "failed" | "blocked";
   server_id?: number;
 }

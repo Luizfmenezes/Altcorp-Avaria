@@ -31,6 +31,7 @@ class VehicleOut(BaseModel):
     year: Optional[int]
     vehicle_type: str
     is_active: bool
+    default_photo_url: Optional[str] = None
     created_at: datetime
 
     class Config:

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from typing import List, Optional
 import json, asyncio
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from app.core.database import get_db
 from app.core.deps import require_web_access, require_inspector
 from app.models.user import User
@@ -24,6 +24,12 @@ def _serialize(i: Inspection) -> InspectionOut:
         vehicle_id=i.vehicle_id,
         vehicle_plate=i.vehicle.plate if i.vehicle else None,
         vehicle_model=i.vehicle.model if i.vehicle else None,
+        vehicle_type=i.vehicle.vehicle_type if i.vehicle else None,
+        vehicle_default_photo_url=(
+            storage.public_url(i.vehicle.default_photo_key)
+            if i.vehicle and i.vehicle.default_photo_key
+            else None
+        ),
         inspector_id=i.inspector_id,
         inspector_name=i.inspector.name if i.inspector else None,
         inspection_type=i.inspection_type,
@@ -48,12 +54,40 @@ def _serialize(i: Inspection) -> InspectionOut:
 def list_inspections(
     limit: int = Query(50, le=200),
     status: Optional[str] = None,
+    prefix: Optional[str] = Query(None, description="Filtra pelo prefixo do veículo"),
+    model: Optional[str] = Query(None, description="Filtra pela marca/modelo do veículo"),
+    day: Optional[str] = Query(None, description="Filtra por dia (YYYY-MM-DD)"),
+    month: Optional[str] = Query(None, description="Filtra por mês (YYYY-MM)"),
     db: Session = Depends(get_db),
     _: User = Depends(require_web_access),
 ):
     q = db.query(Inspection)
     if status:
         q = q.filter(Inspection.status == status)
+
+    if prefix or model:
+        q = q.join(Vehicle, Inspection.vehicle_id == Vehicle.id)
+        if prefix:
+            q = q.filter(Vehicle.prefix.ilike(f"%{prefix.strip()}%"))
+        if model:
+            q = q.filter(Vehicle.model.ilike(f"%{model.strip()}%"))
+
+    if day:
+        try:
+            d = date.fromisoformat(day)
+        except ValueError:
+            raise HTTPException(422, "Parâmetro 'day' deve estar no formato YYYY-MM-DD")
+        start = datetime(d.year, d.month, d.day)
+        q = q.filter(Inspection.performed_at >= start, Inspection.performed_at < start + timedelta(days=1))
+    elif month:
+        try:
+            y, m = (int(p) for p in month.split("-"))
+            start = datetime(y, m, 1)
+            end = datetime(y + (m // 12), (m % 12) + 1, 1)
+        except (ValueError, IndexError):
+            raise HTTPException(422, "Parâmetro 'month' deve estar no formato YYYY-MM")
+        q = q.filter(Inspection.performed_at >= start, Inspection.performed_at < end)
+
     items = q.order_by(desc(Inspection.performed_at)).limit(limit).all()
     return [_serialize(i) for i in items]
 

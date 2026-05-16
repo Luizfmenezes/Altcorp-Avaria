@@ -13,6 +13,7 @@ class Vehicle(Base):
     chassis = Column(String(60), nullable=True)
     year = Column(Integer, nullable=True)
     vehicle_type = Column(String(20), nullable=False, default="bus")
+    default_photo_key = Column(String(512), nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 

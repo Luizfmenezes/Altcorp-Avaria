@@ -44,6 +44,8 @@ class InspectionOut(BaseModel):
     vehicle_id: int
     vehicle_plate: Optional[str] = None
     vehicle_model: Optional[str] = None
+    vehicle_type: Optional[str] = None
+    vehicle_default_photo_url: Optional[str] = None
     inspector_id: Optional[int]
     inspector_name: Optional[str] = None
     inspection_type: str

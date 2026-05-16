@@ -18,6 +18,7 @@ type PendingInspection = {
   created_at: number;
   attempts: number;
   last_error?: string;
+  next_retry_at?: number;
   status_sync: "pending" | "syncing" | "synced" | "failed" | "blocked";
   server_id?: number;
 };
@@ -42,10 +43,15 @@ type SyncFailureError = Error & {
 };
 
 const DB_NAME = "altcorp-avarias";
+// Deve casar com a maior versão declarada em src/db/dexie.ts.
 const DB_VERSION = 2;
 const INSPECTIONS_STORE = "inspections";
 const SETTINGS_STORE = "settings";
 const SYNC_TAG = "inspection-sync";
+// Mesmo nome do Web Lock usado em syncQueue.ts — serializa página + SW.
+const SYNC_LOCK = "altcorp-inspection-sync";
+const INSPECTION_TIMEOUT = 30_000;
+const PHOTO_UPLOAD_TIMEOUT = 90_000;
 
 self.skipWaiting();
 clientsClaim();
@@ -120,8 +126,11 @@ async function getPendingInspections(database: IDBDatabase): Promise<PendingInsp
   const store = transaction.objectStore(INSPECTIONS_STORE);
   const items = await requestToPromise(store.getAll()) as PendingInspection[];
   await transactionDone(transaction);
+  const now = Date.now();
   return items
     .filter((item) => item.status_sync === "pending" || item.status_sync === "failed")
+    // Respeita o backoff: só reenvia quando o próximo retry já chegou.
+    .filter((item) => !item.next_retry_at || item.next_retry_at <= now)
     .sort((left, right) => left.created_at - right.created_at);
 }
 
@@ -161,6 +170,19 @@ function isPermanentFailure(status: number | undefined) {
   return status === 400 || status === 404;
 }
 
+/** Backoff exponencial: 5s, 10s, 20s, 40s, 80s, 160s — teto 5min. */
+function retryDelay(attempts: number): number {
+  const step = Math.min(Math.max(attempts, 1), 6);
+  return Math.min(5_000 * 2 ** (step - 1), 5 * 60_000);
+}
+
+/** AbortSignal que dispara após `ms` — sem ele um fetch travado pendura o sync. */
+function timeoutSignal(ms: number): { signal: AbortSignal; clear: () => void } {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), ms);
+  return { signal: controller.signal, clear: () => clearTimeout(id) };
+}
+
 async function notifyClients() {
   const clients = await self.clients.matchAll({ includeUncontrolled: true, type: "window" });
   for (const client of clients) {
@@ -168,7 +190,25 @@ async function notifyClients() {
   }
 }
 
+/**
+ * Envelopa o passe de sync no Web Lock global. Página e service worker
+ * compartilham o mesmo lock — assim a mesma vistoria nunca é enviada duas
+ * vezes em paralelo (causa raiz das fotos duplicadas). `ifAvailable` faz o
+ * SW desistir de imediato quando a página já está sincronizando.
+ */
 async function syncPendingInspections(): Promise<void> {
+  const locks = self.navigator?.locks;
+  if (!locks?.request) {
+    await runSyncPass();
+    return;
+  }
+  await locks.request(SYNC_LOCK, { ifAvailable: true }, async (lock) => {
+    if (!lock) return; // A página (ou outro SW) já está sincronizando.
+    await runSyncPass();
+  });
+}
+
+async function runSyncPass(): Promise<void> {
   const database = await openDatabase();
 
   try {
@@ -184,22 +224,29 @@ async function syncPendingInspections(): Promise<void> {
       try {
         await putInspection(database, { ...item, status_sync: "syncing", last_error: undefined });
 
-        const inspectionResponse = await fetch(`${apiUrl}/api/v1/inspections`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            client_uuid: item.uuid,
-            vehicle_plate: item.vehicle_plate,
-            inspection_type: item.inspection_type,
-            status: item.status,
-            notes: item.notes,
-            damages: item.damages,
-            performed_at: item.performed_at,
-          }),
-        });
+        const inspectionTimeout = timeoutSignal(INSPECTION_TIMEOUT);
+        let inspectionResponse: Response;
+        try {
+          inspectionResponse = await fetch(`${apiUrl}/api/v1/inspections`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              client_uuid: item.uuid,
+              vehicle_plate: item.vehicle_plate,
+              inspection_type: item.inspection_type,
+              status: item.status,
+              notes: item.notes,
+              damages: item.damages,
+              performed_at: item.performed_at,
+            }),
+            signal: inspectionTimeout.signal,
+          });
+        } finally {
+          inspectionTimeout.clear();
+        }
 
         if (!inspectionResponse.ok) {
           const error = new Error(await readError(inspectionResponse)) as SyncFailureError;
@@ -212,13 +259,20 @@ async function syncPendingInspections(): Promise<void> {
           const formData = new FormData();
           formData.append("file", photo.blob, `${photo.id}.jpg`);
 
-          const photoResponse = await fetch(`${apiUrl}/api/v1/inspections/${inspectionData.id}/photos`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: formData,
-          });
+          const photoTimeout = timeoutSignal(PHOTO_UPLOAD_TIMEOUT);
+          let photoResponse: Response;
+          try {
+            photoResponse = await fetch(`${apiUrl}/api/v1/inspections/${inspectionData.id}/photos`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              body: formData,
+              signal: photoTimeout.signal,
+            });
+          } finally {
+            photoTimeout.clear();
+          }
 
           if (!photoResponse.ok) {
             const error = new Error(await readError(photoResponse)) as SyncFailureError;
@@ -230,12 +284,17 @@ async function syncPendingInspections(): Promise<void> {
         await deleteInspection(database, item.uuid);
       } catch (error) {
         const failure = error as SyncFailureError;
-        const message = failure.message || "Falha ao sincronizar em background.";
+        const message = failure.name === "AbortError"
+          ? "Tempo de envio esgotado — tentaremos novamente."
+          : failure.message || "Falha ao sincronizar em background.";
+        const blocked = isPermanentFailure(failure.status);
+        const attempts = (item.attempts ?? 0) + 1;
         await putInspection(database, {
           ...item,
-          status_sync: isPermanentFailure(failure.status) ? "blocked" : "failed",
-          attempts: (item.attempts ?? 0) + 1,
+          status_sync: blocked ? "blocked" : "failed",
+          attempts,
           last_error: message,
+          next_retry_at: blocked ? undefined : Date.now() + retryDelay(attempts),
         });
       }
     }

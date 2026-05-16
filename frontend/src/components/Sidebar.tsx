@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Activity, Flame, Truck, Users as UsersIcon, ArrowUpRight } from "lucide-react";
+import { LayoutDashboard, Activity, Flame, Truck, Users as UsersIcon, ArrowUpRight, Search, Command } from "lucide-react";
 import { useAuth } from "../stores/auth";
+import { openCommandSearch } from "./CommandSearch";
 import clsx from "clsx";
 
 const items = [
@@ -29,6 +30,19 @@ export function Sidebar() {
             <div className="mt-0.5 text-[9.5px] font-mono uppercase tracking-[0.22em] text-ink-400">Controle de Avarias</div>
           </div>
         </div>
+
+        {/* Quick search */}
+        <button
+          type="button"
+          onClick={openCommandSearch}
+          className="mb-5 flex items-center gap-2.5 rounded-2xl border border-ink-100 bg-paper-50 px-3 py-2.5 text-[12.5px] text-ink-500 transition-all hover:border-ink-300 hover:text-ink-900"
+        >
+          <Search size={14} />
+          <span className="flex-1 text-left">Buscar veículo…</span>
+          <span className="flex items-center gap-0.5 rounded-md border border-ink-100 bg-white px-1.5 py-0.5 font-mono text-[9.5px] text-ink-400">
+            <Command size={9} />K
+          </span>
+        </button>
 
         {/* Eyebrow */}
         <div className="mb-3 flex items-center justify-between px-2">

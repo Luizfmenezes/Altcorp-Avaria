@@ -125,18 +125,18 @@ export function Inspection() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-navy-50/40">
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-navy-100 bg-white px-4 py-3">
-        <Link to="/" className="rounded-xl p-2 text-navy-700 active:bg-navy-50"><ArrowLeft size={20} /></Link>
-        <div className="text-sm font-bold uppercase tracking-widest text-navy-900">
+    <div className="flex min-h-screen flex-col bg-paper-50">
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-ink-100 bg-white/90 px-4 py-3 backdrop-blur-xl">
+        <Link to="/" className="rounded-xl p-2 text-ink-700 active:bg-ink-50"><ArrowLeft size={20} /></Link>
+        <div className="font-display text-sm font-semibold uppercase tracking-[0.14em] text-ink-900">
           {inspectionType === "exit" ? "Vistoria de Saída" : "Vistoria de Retorno"}
         </div>
         <div className="w-10" />
       </header>
 
       <main className="flex-1 space-y-4 p-4 pb-32">
-        <div className="card p-4">
-          <label htmlFor={plateInputId} className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-navy-500">Placa</label>
+        <div className="card p-4 animate-fade-in">
+          <label htmlFor={plateInputId} className="label-form">Placa</label>
           <input
             id={plateInputId}
             value={plate}
@@ -155,13 +155,13 @@ export function Inspection() {
         </div>
 
         {damages.map((d) => (
-          <div key={d.id} className="card p-4 animate-fade-in">
+          <div key={d.id} className="card p-4 animate-scale-in">
             <div className="flex items-start justify-between">
               <div>
-                <div className="text-xs uppercase tracking-widest text-navy-400">Área</div>
-                <div className="font-semibold text-navy-900">{d.description || d.area_code}</div>
+                <div className="eyebrow">Área</div>
+                <div className="font-semibold text-ink-900">{d.description || d.area_code}</div>
               </div>
-              <button onClick={() => removeDamage(d.id)} className="rounded-xl p-2 text-rose-600 active:bg-rose-50"><X size={18} /></button>
+              <button onClick={() => removeDamage(d.id)} className="rounded-xl p-2 text-danger-600 active:bg-danger-500/10"><X size={18} /></button>
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2">
               {(["low","medium","high"] as const).map((s) => (
@@ -169,7 +169,7 @@ export function Inspection() {
                   key={s}
                   onClick={() => updateDamage(d.id, { severity: s })}
                   className={`rounded-xl border px-3 py-2 text-xs font-semibold capitalize transition-all ${
-                    d.severity === s ? "border-navy-900 bg-navy-900 text-white" : "border-navy-200 bg-white text-navy-700"
+                    d.severity === s ? "border-ink-900 bg-ink-900 text-paper-50" : "border-ink-200 bg-white text-ink-700"
                   }`}
                 >
                   {severityLabel(s)}
@@ -185,11 +185,11 @@ export function Inspection() {
             />
             <div className="mt-3 flex flex-wrap gap-2">
               {d.photos.map((p) => (
-                <div key={p.id} className="relative h-20 w-20 overflow-hidden rounded-xl bg-navy-100">
+                <div key={p.id} className="relative h-20 w-20 overflow-hidden rounded-xl bg-ink-100">
                   <img src={p.url} alt="" className="h-full w-full object-cover" />
                 </div>
               ))}
-              <button onClick={() => openCamera(d.id)} className="flex h-20 w-20 flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-navy-200 text-navy-500 active:scale-95">
+              <button onClick={() => openCamera(d.id)} className="flex h-20 w-20 flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-ink-200 text-ink-500 transition-transform active:scale-95">
                 <Camera size={20} />
                 <span className="text-[10px] font-semibold">Foto</span>
               </button>
@@ -198,7 +198,7 @@ export function Inspection() {
         ))}
 
         <div className="card p-4">
-          <label htmlFor={notesInputId} className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-navy-500">Observações</label>
+          <label htmlFor={notesInputId} className="label-form">Observações</label>
           <textarea
             id={notesInputId}
             value={notes}
@@ -209,15 +209,15 @@ export function Inspection() {
           />
         </div>
 
-        {error && <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
+        {error && <div className="rounded-2xl border border-danger-500/30 bg-danger-500/10 px-4 py-3 text-sm font-medium text-danger-600">{error}</div>}
       </main>
 
-      <footer className="fixed inset-x-0 bottom-0 border-t border-navy-100 bg-white px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(1,1,24,0.1)]">
+      <footer className="fixed inset-x-0 bottom-0 border-t border-ink-100 bg-white/95 px-4 py-3 backdrop-blur-xl shadow-[0_-8px_24px_-12px_rgba(10,10,12,0.12)]">
         <div className="mb-2 flex items-center justify-between text-xs">
           {damages.length === 0 ? (
             <span className="badge bg-emerald-100 text-emerald-700"><CheckCircle2 size={12} /> Aprovado (sem avarias)</span>
           ) : (
-            <span className="badge bg-rose-100 text-rose-700"><AlertTriangle size={12} /> {damages.length} avaria(s)</span>
+            <span className="badge bg-danger-500/15 text-danger-600"><AlertTriangle size={12} /> {damages.length} avaria(s)</span>
           )}
         </div>
         <button disabled={saving} onClick={save} className="btn-primary w-full">

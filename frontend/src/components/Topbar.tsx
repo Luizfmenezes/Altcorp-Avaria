@@ -2,6 +2,7 @@ import { LogOut, Bell, Search, Command } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "../stores/auth";
 import { useNavigate } from "react-router-dom";
+import { openCommandSearch } from "./CommandSearch";
 
 export function Topbar() {
   const user = useAuth((s) => s.user);
@@ -46,11 +47,15 @@ export function Topbar() {
       </div>
 
       <div className="flex items-center gap-2">
-        {/* Cmd-K hint */}
-        <button className="hidden items-center gap-2 rounded-full border border-ink-100 bg-white/80 px-3.5 py-2 text-[12px] text-ink-500 transition-all hover:border-ink-300 hover:text-ink-900 md:flex">
+        {/* Command search trigger */}
+        <button
+          type="button"
+          onClick={openCommandSearch}
+          className="flex items-center gap-2 rounded-full border border-ink-100 bg-white/80 px-3.5 py-2 text-[12px] text-ink-500 transition-all hover:border-ink-300 hover:text-ink-900"
+        >
           <Search size={14} />
-          <span>Buscar</span>
-          <span className="ml-2 flex items-center gap-1 rounded-md border border-ink-100 bg-paper-100 px-1.5 py-0.5 font-mono text-[9.5px] text-ink-500">
+          <span className="hidden md:inline">Buscar veículo</span>
+          <span className="ml-1 hidden items-center gap-1 rounded-md border border-ink-100 bg-paper-100 px-1.5 py-0.5 font-mono text-[9.5px] text-ink-500 md:flex">
             <Command size={9} />K
           </span>
         </button>
