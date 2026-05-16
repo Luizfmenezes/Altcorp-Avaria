@@ -9,16 +9,19 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.18.0",
+    "axios": "^1.7.7",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^11.11.7",
+    "lucide-react": "^0.453.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.27.0",
-    "axios": "^1.7.7",
-    "zustand": "^5.0.0",
     "recharts": "^2.13.0",
-    "date-fns": "^4.1.0",
-    "lucide-react": "^0.453.0",
-    "framer-motion": "^11.11.7",
-    "clsx": "^2.1.1"
+    "three": "^0.169.0",
+    "zustand": "^5.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.11",

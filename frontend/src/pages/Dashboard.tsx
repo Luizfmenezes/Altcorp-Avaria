@@ -1,6 +1,19 @@
-import { useEffect, useState } from "react";
-import { Truck, AlertTriangle, ClipboardCheck, Clock, TrendingUp, Download } from "lucide-react";
-import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar } from "recharts";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Truck,
+  AlertTriangle,
+  ClipboardCheck,
+  Clock,
+  TrendingUp,
+  Download,
+  ArrowUpRight,
+  Activity,
+} from "lucide-react";
+import {
+  LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid,
+  BarChart, Bar, Area, AreaChart, ReferenceLine,
+} from "recharts";
+import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { StatCard } from "../components/StatCard";
 
@@ -29,8 +42,7 @@ function downloadCsv(filename: string, headers: string[], rows: Array<Array<stri
   const csv = [headers, ...rows]
     .map((row) => row.map((cell) => csvEscape(cell)).join(";"))
     .join("\n");
-
-  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
+  const blob = new Blob([`﻿${csv}`], { type: "text/csv;charset=utf-8;" });
   const href = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = href;
@@ -47,6 +59,20 @@ function formatAverage(hours: number | null | undefined) {
   return `${hours.toFixed(1)}h`;
 }
 
+function TooltipCard({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-2xl border border-ink-100 bg-white px-4 py-3 shadow-card">
+      <div className="font-mono text-[10px] uppercase tracking-wider text-ink-400">{label}</div>
+      <div className="mt-1 flex items-center gap-2">
+        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: payload[0].color }} />
+        <span className="font-display text-lg font-medium text-ink-900">{payload[0].value}</span>
+        <span className="text-[10.5px] text-ink-500">vistorias</span>
+      </div>
+    </div>
+  );
+}
+
 export function Dashboard() {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [top, setTop] = useState<TopVehicle[]>([]);
@@ -55,6 +81,12 @@ export function Dashboard() {
     api.get("/api/v1/dashboard/metrics").then((r) => setMetrics(r.data));
     api.get("/api/v1/dashboard/top-vehicles").then((r) => setTop(r.data));
   }, []);
+
+  const avgDaily = useMemo(() => {
+    if (!metrics?.daily?.length) return 0;
+    const sum = metrics.daily.reduce((a, b) => a + b.total, 0);
+    return Math.round(sum / metrics.daily.length);
+  }, [metrics]);
 
   function exportSummary() {
     if (!metrics) return;
@@ -70,150 +102,228 @@ export function Dashboard() {
       ]
     );
   }
-
   function exportDaily() {
     if (!metrics) return;
-    downloadCsv(
-      "dashboard-vistorias-diarias.csv",
-      ["Dia", "Total"],
-      metrics.daily.map((item) => [item.day, item.total])
-    );
+    downloadCsv("dashboard-vistorias-diarias.csv", ["Dia", "Total"], metrics.daily.map((i) => [i.day, i.total]));
   }
-
   function exportTopVehicles() {
-    downloadCsv(
-      "dashboard-veiculos-criticos.csv",
-      ["Placa", "Modelo", "Avarias"],
-      top.map((item) => [item.plate, item.model, item.damages])
-    );
+    downloadCsv("dashboard-veiculos-criticos.csv", ["Placa", "Modelo", "Avarias"], top.map((t) => [t.plate, t.model, t.damages]));
   }
 
   return (
-    <div className="space-y-8 max-w-[1400px] mx-auto">
-      {/* Header and Main Card */}
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-        
-        {/* Main Metric Card (Neobank style) */}
-        <div className="w-full lg:w-[400px] rounded-[32px] bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-navy-100/50">
-          <div className="text-[15px] font-medium text-navy-500">Frota total ativa</div>
-          <div className="mt-2 flex items-center justify-between">
-            <div className="text-5xl font-extrabold tracking-tight text-navy-900">
-              {metrics?.total_vehicles ?? "—"}
+    <div className="mx-auto max-w-[1480px] space-y-10">
+      {/* HERO */}
+      <section className="grid gap-6 lg:grid-cols-[1fr_420px]">
+        <div className="relative overflow-hidden rounded-[36px] bg-ink-900 p-8 text-paper-50 shadow-hero lg:p-12">
+          <div className="pointer-events-none absolute -right-32 -top-32 h-[420px] w-[420px] rounded-full bg-lime-400/12 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-40 -left-20 h-[320px] w-[320px] rounded-full bg-brand-500/10 blur-3xl" />
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.08]"
+            style={{
+              backgroundImage:
+                "linear-gradient(to right, rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.18) 1px, transparent 1px)",
+              backgroundSize: "44px 44px",
+            }}
+          />
+          <div className="relative">
+            <div className="flex items-center gap-2">
+              <Activity size={14} className="text-lime-400" />
+              <span className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-paper-50/70">
+                Painel · tempo real
+              </span>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-navy-50">
-              <Truck size={24} className="text-navy-900" />
+            <h1 className="mt-6 display-lg text-balance text-paper-50">
+              Operação<br />
+              <span className="text-lime-400">sob controle.</span>
+            </h1>
+            <p className="mt-5 max-w-md text-[14.5px] leading-relaxed text-paper-50/65">
+              Visão consolidada de vistorias, ocorrências e KPIs da frota corporativa.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <button onClick={exportSummary} disabled={!metrics} className="btn-lime">
+                <Download size={14} /> Exportar relatório
+              </button>
+              <Link to="/feed" className="btn-secondary border-white/20 bg-white/10 text-paper-50 hover:bg-white/15 hover:border-white/40">
+                <ArrowUpRight size={14} /> Ver feed
+              </Link>
             </div>
           </div>
-          <button className="mt-8 w-full rounded-full bg-[#1c1c1c] py-4 text-[15px] font-bold text-white transition-all hover:bg-black active:scale-[0.98]">
-            Ver todos os veículos
-          </button>
         </div>
 
-        {/* Header Actions (Desktop) */}
-        <div className="hidden lg:flex flex-col items-end gap-4">
-          <div className="text-right">
-            <h1 className="text-3xl font-bold tracking-tight text-navy-900">Dashboard</h1>
-            <p className="mt-1 text-sm text-navy-500">Visão consolidada da operação.</p>
+        {/* Fleet card */}
+        <div className="relative overflow-hidden rounded-[36px] bg-lime-400 p-8 text-ink-900 shadow-glow">
+          <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full border-2 border-ink-900/10" />
+          <div className="pointer-events-none absolute -bottom-16 -right-16 h-56 w-56 rounded-full border-2 border-ink-900/10" />
+          <div className="relative flex h-full flex-col">
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="eyebrow text-ink-700">Frota Ativa</span>
+                <div className="mt-1 font-display text-[15px] font-semibold tracking-tightest">
+                  Total de veículos
+                </div>
+              </div>
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-ink-900 text-lime-400">
+                <Truck size={18} />
+              </div>
+            </div>
+            <div className="mt-8 flex items-baseline gap-2">
+              <div className="stat-num text-[88px] font-medium leading-none">{metrics?.total_vehicles ?? "—"}</div>
+              <div className="font-mono text-[11px] uppercase tracking-wider text-ink-700">unidades</div>
+            </div>
+            <div className="mt-auto pt-8">
+              <Link
+                to="/vehicles"
+                className="group flex w-full items-center justify-between rounded-2xl border border-ink-900 bg-ink-900 px-5 py-3.5 text-[13px] font-bold uppercase tracking-[0.14em] text-lime-400 transition-all hover:bg-ink-800"
+              >
+                Ver todos os veículos
+                <ArrowUpRight size={16} className="transition-transform group-hover:rotate-45" />
+              </Link>
+            </div>
           </div>
-          <button onClick={exportSummary} disabled={!metrics} className="btn-secondary rounded-full">
-            <Download size={16} /> Exportar métricas
-          </button>
         </div>
-      </div>
+      </section>
 
-      {/* Other Metrics - Horizontal Scroll on Mobile */}
-      <div>
-        <div className="mb-4 flex items-center justify-between px-2">
-          <h2 className="text-lg font-bold text-navy-900">Seus indicadores</h2>
+      {/* INDICATOR STRIP */}
+      <section>
+        <div className="mb-5 flex items-end justify-between">
+          <div>
+            <div className="eyebrow">Indicadores chave</div>
+            <h2 className="display mt-1 text-2xl font-semibold text-ink-900">Performance dos últimos 7 dias</h2>
+          </div>
+          <span className="hidden font-mono text-[11px] text-ink-400 md:inline">atualizado · agora</span>
         </div>
-        <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar snap-x px-2 lg:grid lg:grid-cols-4 lg:snap-none lg:overflow-visible lg:px-0">
-          <div className="min-w-[160px] snap-center">
-            <StatCard
-              label="Avarias (7d)"
-              value={metrics?.vehicles_with_damage_week ?? "—"}
-              icon={AlertTriangle}
-              accent="rose"
-            />
-          </div>
-          <div className="min-w-[160px] snap-center">
-            <StatCard
-              label="Vistorias"
-              value={metrics?.inspections_week ?? "—"}
-              icon={ClipboardCheck}
-              accent="brand"
-            />
-          </div>
-          <div className="min-w-[160px] snap-center">
-            <StatCard
-              label="Mês Atual"
-              value={metrics?.damages_month ?? "—"}
-              icon={TrendingUp}
-              accent="amber"
-            />
-          </div>
-          <div className="min-w-[160px] snap-center">
-            <StatCard
-              label="Média (h)"
-              value={formatAverage(metrics?.avg_hours_between_inspections)}
-              icon={Clock}
-              accent="navy"
-            />
-          </div>
+        <div className="grid gap-4 stagger md:grid-cols-2 xl:grid-cols-4">
+          <StatCard label="Vistorias (7d)" value={metrics?.inspections_week ?? 0} icon={ClipboardCheck} hint="Total registrado" variant="ink" />
+          <StatCard label="Avarias (7d)"   value={metrics?.vehicles_with_damage_week ?? 0} icon={AlertTriangle} hint="Veículos comprometidos" variant="lime" />
+          <StatCard label="Mês corrente"   value={metrics?.damages_month ?? 0} icon={TrendingUp} hint="Avarias acumuladas" variant="paper" />
+          <StatCard label="Tempo médio"    value={formatAverage(metrics?.avg_hours_between_inspections)} icon={Clock} hint="Entre vistorias" variant="white" />
         </div>
-      </div>
+      </section>
 
-      {/* Charts Section */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="card p-6 lg:col-span-2 rounded-[32px]">
-          <div className="flex items-center justify-between">
+      {/* CHARTS */}
+      <section className="grid gap-6 lg:grid-cols-3">
+        {/* Daily inspections — large */}
+        <div className="card overflow-hidden p-7 lg:col-span-2">
+          <div className="flex items-start justify-between gap-3">
             <div>
-              <h3 className="text-lg font-bold text-navy-900">Vistorias diárias</h3>
-              <p className="text-sm text-navy-500">Volume no mês corrente.</p>
+              <div className="eyebrow">Volume diário</div>
+              <h3 className="display mt-1 text-xl font-semibold text-ink-900">Vistorias por dia</h3>
+              <p className="mt-1 text-[13px] text-ink-500">Tendência do mês corrente · média {avgDaily}/dia</p>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={exportDaily} disabled={!metrics} className="btn-secondary rounded-full px-3 py-2 text-sm">
-                <Download size={14} /> CSV
+              <span className="chip">
+                <span className="h-2 w-2 rounded-full bg-lime-400" />
+                Total
+              </span>
+              <button onClick={exportDaily} disabled={!metrics} className="btn-secondary px-3.5 py-2 text-[12px]">
+                <Download size={13} /> CSV
               </button>
             </div>
           </div>
           <div className="mt-8 h-72">
             <ResponsiveContainer>
-              <LineChart data={metrics?.daily ?? []}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e7ecf6" vertical={false} />
-                <XAxis dataKey="day" tick={{ fontSize: 12, fill: "#5d77b8" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: "#5d77b8" }} axisLine={false} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ borderRadius: 16, border: "none", boxShadow: "0 8px 30px rgba(0,0,0,0.08)", padding: "12px" }}
+              <AreaChart data={metrics?.daily ?? []} margin={{ left: -12, top: 12, right: 8, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="areaLime" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#bce416" stopOpacity={0.5} />
+                    <stop offset="100%" stopColor="#bce416" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 4" stroke="#e7ecf6" vertical={false} />
+                <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#6e6e78" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "#6e6e78" }} axisLine={false} tickLine={false} width={28} />
+                <Tooltip content={<TooltipCard />} cursor={{ stroke: "#0a0a0c", strokeDasharray: "3 3", strokeWidth: 1 }} />
+                {avgDaily > 0 && (
+                  <ReferenceLine y={avgDaily} stroke="#0a0a0c" strokeDasharray="4 4" strokeWidth={1}
+                    label={{ value: `média ${avgDaily}`, position: "right", fill: "#0a0a0c", fontSize: 10, fontFamily: "JetBrains Mono" }} />
+                )}
+                <Area
+                  type="monotone"
+                  dataKey="total"
+                  stroke="#0a0a0c"
+                  strokeWidth={2.2}
+                  fill="url(#areaLime)"
+                  dot={{ r: 0 }}
+                  activeDot={{ r: 5, fill: "#bce416", stroke: "#0a0a0c", strokeWidth: 2 }}
                 />
-                <Line type="monotone" dataKey="total" stroke="#bce416" strokeWidth={4} dot={{ r: 4, fill: "#bce416", strokeWidth: 0 }} activeDot={{ r: 6 }} />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="card p-6 rounded-[32px]">
+        {/* Top critical */}
+        <div className="card relative overflow-hidden p-7">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h3 className="text-lg font-bold text-navy-900">Top críticos</h3>
-              <p className="text-sm text-navy-500">Mais avarias acumuladas.</p>
+              <div className="eyebrow">Ranking</div>
+              <h3 className="display mt-1 text-xl font-semibold text-ink-900">Veículos críticos</h3>
+              <p className="mt-1 text-[13px] text-ink-500">Mais avarias acumuladas</p>
             </div>
-            <button onClick={exportTopVehicles} disabled={top.length === 0} className="btn-secondary rounded-full px-3 py-2 text-sm">
-              <Download size={14} />
+            <button onClick={exportTopVehicles} disabled={top.length === 0} className="btn-secondary px-3 py-2 text-[12px]">
+              <Download size={13} />
             </button>
           </div>
-          <div className="mt-8 h-72">
+          <div className="mt-6 space-y-2.5">
+            {top.slice(0, 6).map((v, i) => {
+              const maxD = Math.max(1, ...top.map((t) => t.damages));
+              const pct = (v.damages / maxD) * 100;
+              return (
+                <Link
+                  key={v.id}
+                  to={`/vehicles/${v.id}`}
+                  className="group block rounded-2xl border border-ink-100 bg-paper-50 p-3 transition-all hover:border-ink-900 hover:bg-white"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-[10px] font-bold text-ink-400">#{String(i + 1).padStart(2, "0")}</span>
+                      <div>
+                        <div className="font-mono text-[13px] font-bold tracking-wider text-ink-900">{v.plate}</div>
+                        <div className="text-[10.5px] text-ink-500">{v.model}</div>
+                      </div>
+                    </div>
+                    <span className="font-display text-lg font-medium text-ink-900">{v.damages}</span>
+                  </div>
+                  <div className="mt-2 h-1 overflow-hidden rounded-full bg-ink-100">
+                    <div
+                      className="h-full rounded-full bg-ink-900 transition-all duration-700 group-hover:bg-lime-400"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </Link>
+              );
+            })}
+            {top.length === 0 && (
+              <div className="py-8 text-center text-[12px] text-ink-400">Sem dados ainda.</div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* SECONDARY CHART */}
+      <section className="grid gap-6 lg:grid-cols-3">
+        <div className="card overflow-hidden p-7 lg:col-span-3">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="eyebrow">Distribuição</div>
+              <h3 className="display mt-1 text-xl font-semibold text-ink-900">Ranking de veículos · barras</h3>
+              <p className="mt-1 text-[13px] text-ink-500">Comparativo entre os mais críticos da frota</p>
+            </div>
+          </div>
+          <div className="mt-6 h-64">
             <ResponsiveContainer>
-              <BarChart data={top} layout="vertical" margin={{ left: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e7ecf6" horizontal={true} vertical={false} />
-                <XAxis type="number" tick={{ fontSize: 12, fill: "#5d77b8" }} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="plate" tick={{ fontSize: 12, fill: "#1c1c1c", fontWeight: 600 }} width={70} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ borderRadius: 16, border: "none", boxShadow: "0 8px 30px rgba(0,0,0,0.08)" }} cursor={{ fill: "#f4f6fb" }} />
-                <Bar dataKey="damages" fill="#1c1c1c" radius={[0, 8, 8, 0]} barSize={24} />
+              <BarChart data={top} margin={{ left: -10, top: 8, right: 8 }}>
+                <CartesianGrid strokeDasharray="3 4" stroke="#e7ecf6" vertical={false} />
+                <XAxis dataKey="plate" tick={{ fontSize: 10, fill: "#6e6e78", fontFamily: "JetBrains Mono" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "#6e6e78" }} axisLine={false} tickLine={false} width={28} />
+                <Tooltip cursor={{ fill: "rgba(10,10,12,0.04)" }}
+                  contentStyle={{ borderRadius: 16, border: "1px solid #ececef", boxShadow: "0 8px 30px rgba(0,0,0,0.08)", fontSize: 12 }}
+                />
+                <Bar dataKey="damages" fill="#0a0a0c" radius={[8, 8, 0, 0]} barSize={28} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

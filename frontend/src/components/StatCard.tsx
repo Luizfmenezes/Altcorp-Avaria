@@ -1,39 +1,85 @@
-import { LucideIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { LucideIcon, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 interface Props {
   label: string;
   value: string | number;
   icon: LucideIcon;
   hint?: string;
-  accent?: "navy" | "brand" | "amber" | "rose";
+  delta?: number;
+  variant?: "ink" | "lime" | "paper" | "white";
 }
 
-const accents: Record<string, string> = {
-  navy: "bg-[#eaf1bc] text-[#1c1c1c]", // lime/neo-green style for accent
-  brand: "bg-[#1c1c1c] text-white",     // dark style
-  amber: "bg-[#f4f6fb] text-[#1c1c1c]", // light style
-  rose: "bg-rose-500 text-white",
+const variants: Record<string, { bg: string; text: string; sub: string; chip: string }> = {
+  ink:   { bg: "bg-ink-900 text-paper-50",  text: "text-paper-50", sub: "text-paper-50/65", chip: "bg-white/10 text-paper-50" },
+  lime:  { bg: "bg-lime-400 text-ink-900",  text: "text-ink-900",  sub: "text-ink-700",      chip: "bg-ink-900 text-lime-400" },
+  paper: { bg: "bg-paper-100 text-ink-900", text: "text-ink-900",  sub: "text-ink-500",      chip: "bg-ink-900 text-paper-50" },
+  white: { bg: "bg-white text-ink-900",     text: "text-ink-900",  sub: "text-ink-500",      chip: "bg-ink-50 text-ink-900" },
 };
 
-export function StatCard({ label, value, icon: Icon, hint, accent = "navy" }: Props) {
-  // Overwrite base card color for specific accents to get the colorful neobank card look
-  const bgClass = accent === 'brand' ? 'bg-[#bce416] border-none' : accent === 'navy' ? 'bg-[#1c1c1c] text-white border-none' : 'bg-white border-navy-100/50';
-  const textClass = accent === 'navy' ? 'text-white' : 'text-navy-900';
-  const labelClass = accent === 'navy' ? 'text-white/70' : 'text-navy-500';
-  
+function useCountUp(target: number, duration = 800) {
+  const [n, setN] = useState(0);
+  const startRef = useRef<number | null>(null);
+  useEffect(() => {
+    let raf = 0;
+    const animate = (t: number) => {
+      if (startRef.current == null) startRef.current = t;
+      const p = Math.min(1, (t - startRef.current) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setN(Math.round(target * eased));
+      if (p < 1) raf = requestAnimationFrame(animate);
+    };
+    startRef.current = null;
+    raf = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+  return n;
+}
+
+export function StatCard({ label, value, icon: Icon, hint, delta, variant = "white" }: Props) {
+  const isNumeric = typeof value === "number";
+  const animated = useCountUp(isNumeric ? value : 0);
+  const display = isNumeric ? animated : value;
+  const v = variants[variant];
+
   return (
-    <div className={`group p-6 transition-all hover:-translate-y-0.5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] animate-slide-up rounded-[28px] border ${bgClass}`}>
-      <div className="flex flex-col h-full justify-between gap-4">
-        <div className="flex items-start justify-between">
-          <div className={`text-[13px] font-medium tracking-wide ${labelClass}`}>{label}</div>
-          <div className={`flex h-10 w-10 items-center justify-center rounded-full ${accents[accent]}`}>
-            <Icon size={18} />
-          </div>
+    <div
+      className={`group relative overflow-hidden rounded-[28px] border border-ink-100/60 p-5 shadow-card transition-all duration-500 hover:-translate-y-1 hover:shadow-hero ${v.bg}`}
+    >
+      {/* Decorative corner ring */}
+      <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full border border-current opacity-10 transition-transform duration-700 group-hover:scale-125" />
+      <div className="pointer-events-none absolute -bottom-16 -right-16 h-40 w-40 rounded-full border border-current opacity-5 transition-transform duration-700 group-hover:scale-110" />
+
+      <div className="relative flex items-start justify-between">
+        <div className={`text-[10.5px] font-semibold uppercase tracking-[0.22em] ${v.sub}`}>{label}</div>
+        <div className={`flex h-9 w-9 items-center justify-center rounded-full ${v.chip} transition-transform duration-300 group-hover:rotate-12`}>
+          <Icon size={15} strokeWidth={2.4} />
         </div>
-        <div>
-          <div className={`text-3xl font-extrabold tracking-tight ${textClass}`}>{value}</div>
-          {hint && <div className={`mt-1 text-xs ${labelClass}`}>{hint}</div>}
+      </div>
+
+      <div className="relative mt-6 flex items-end justify-between gap-3">
+        <div className={`stat-num text-[44px] font-medium leading-none ${v.text}`}>
+          {display}
         </div>
+        {typeof delta === "number" && (
+          <span
+            className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10.5px] font-bold ${
+              delta >= 0 ? "bg-success-500/15 text-success-500" : "bg-danger-500/15 text-danger-500"
+            }`}
+          >
+            {delta >= 0 ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
+            {Math.abs(delta)}%
+          </span>
+        )}
+      </div>
+
+      {hint && <div className={`relative mt-2 text-[11.5px] ${v.sub}`}>{hint}</div>}
+
+      {/* Bottom ticker line */}
+      <div className="relative mt-4 h-px w-full overflow-hidden">
+        <div
+          className={`h-px w-1/3 ${variant === "lime" ? "bg-ink-900" : "bg-current"} opacity-60 transition-all duration-500 group-hover:w-full`}
+        />
       </div>
     </div>
   );

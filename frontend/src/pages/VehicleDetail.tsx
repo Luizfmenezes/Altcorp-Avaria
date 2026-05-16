@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ImageIcon, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ImageIcon, AlertTriangle, CheckCircle2, Calendar, Hash, Tag, Truck } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { api } from "../api/client";
 import { VehicleSilhouette } from "../components/VehicleSilhouette";
 
-interface Vehicle { id: number; plate: string; prefix?: string|null; model: string; year?: number|null; vehicle_type: string; }
+interface Vehicle {
+  id: number; plate: string; prefix?: string|null; model: string; year?: number|null; vehicle_type: string;
+}
 interface Inspection {
   id: number;
   inspection_type: string;
@@ -32,73 +34,136 @@ export function VehicleDetail() {
   const counts: Record<string, number> = {};
   for (const i of history) for (const d of i.damages) counts[d.area_code] = (counts[d.area_code] ?? 0) + 1;
 
+  const damageInspections = history.filter((h) => h.status === "with_damage").length;
+  const approvedInspections = history.length - damageInspections;
+
   return (
-    <div className="space-y-6">
-      <Link to="/vehicles" className="btn-ghost"><ArrowLeft size={16} /> Voltar</Link>
+    <div className="mx-auto max-w-[1480px] space-y-6">
+      <Link to="/vehicles" className="btn-ghost">
+        <ArrowLeft size={14} /> Voltar
+      </Link>
 
       {vehicle && (
-        <div className="card p-6">
-          <div className="flex items-center justify-between">
+        <div className="relative overflow-hidden rounded-[36px] bg-ink-900 p-8 text-paper-50 shadow-hero lg:p-12">
+          <div className="pointer-events-none absolute -right-32 -top-32 h-[420px] w-[420px] rounded-full bg-lime-400/10 blur-3xl" />
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.08]"
+            style={{
+              backgroundImage:
+                "linear-gradient(to right, rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.18) 1px, transparent 1px)",
+              backgroundSize: "44px 44px",
+            }}
+          />
+          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <div className="text-xs uppercase tracking-widest text-navy-400">Prontuário do veículo</div>
-              <div className="mt-1 font-mono text-3xl font-bold text-navy-900">{vehicle.plate}</div>
-              <div className="text-sm text-navy-600">{vehicle.model} · {vehicle.prefix ?? "—"} · {vehicle.year ?? "—"}</div>
+              <div className="flex items-center gap-2">
+                <Truck size={14} className="text-lime-400" />
+                <span className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-paper-50/70">Prontuário do veículo</span>
+              </div>
+              <h1 className="mt-5 font-mono text-[clamp(2.5rem,5vw,4rem)] font-bold tracking-wider leading-none text-paper-50">
+                {vehicle.plate}
+              </h1>
+              <div className="mt-3 font-display text-xl font-medium text-paper-50/85">{vehicle.model}</div>
+              <div className="mt-4 flex flex-wrap gap-4 text-[12px] text-paper-50/70">
+                <span className="inline-flex items-center gap-1.5"><Tag size={12} className="text-lime-400" /> Prefixo · {vehicle.prefix ?? "—"}</span>
+                <span className="inline-flex items-center gap-1.5"><Calendar size={12} className="text-lime-400" /> {vehicle.year ?? "—"}</span>
+                <span className="inline-flex items-center gap-1.5"><Hash size={12} className="text-lime-400" /> ID #{vehicle.id}</span>
+              </div>
             </div>
-            <span className="badge bg-navy-100 text-navy-700 capitalize">{vehicle.vehicle_type === "bus" ? "Ônibus" : "Carro"}</span>
+            <div className="flex gap-3">
+              <span className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-[10.5px] font-semibold uppercase tracking-wider text-paper-50 backdrop-blur-sm">
+                {vehicle.vehicle_type === "bus" ? "Ônibus" : "Carro"}
+              </span>
+            </div>
           </div>
         </div>
       )}
 
+      {/* Stats */}
+      <div className="grid gap-4 sm:grid-cols-3 stagger">
+        <div className="card p-5">
+          <div className="eyebrow">Total de vistorias</div>
+          <div className="mt-2 stat-num text-3xl font-medium text-ink-900">{history.length}</div>
+        </div>
+        <div className="card p-5">
+          <div className="eyebrow">Vistorias OK</div>
+          <div className="mt-2 stat-num text-3xl font-medium text-success-500">{approvedInspections}</div>
+        </div>
+        <div className="card p-5">
+          <div className="eyebrow">Com avaria</div>
+          <div className="mt-2 stat-num text-3xl font-medium text-danger-500">{damageInspections}</div>
+        </div>
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="card p-6">
-          <h3 className="text-base font-semibold text-navy-900">Concentração de avarias</h3>
-          <p className="text-xs text-navy-500">Histórico acumulado deste veículo.</p>
-          <div className="mt-4">
-            <VehicleSilhouette counts={counts} />
+        <div>
+          <div className="mb-3 flex items-end justify-between">
+            <div>
+              <div className="eyebrow">Heatmap individual</div>
+              <h3 className="display mt-1 text-lg font-semibold text-ink-900">Concentração de avarias</h3>
+            </div>
           </div>
+          <VehicleSilhouette counts={counts} compact />
         </div>
 
         <div className="card p-6">
-          <h3 className="text-base font-semibold text-navy-900">Linha do tempo</h3>
-          <p className="text-xs text-navy-500">{history.length} vistorias registradas.</p>
-          <ol className="mt-5 space-y-4 max-h-[28rem] overflow-y-auto pr-2">
+          <div className="mb-4 flex items-end justify-between">
+            <div>
+              <div className="eyebrow">Histórico</div>
+              <h3 className="display mt-1 text-lg font-semibold text-ink-900">Linha do tempo</h3>
+              <p className="text-[12.5px] text-ink-500">{history.length} registros</p>
+            </div>
+          </div>
+          <ol className="relative max-h-[36rem] space-y-4 overflow-y-auto pr-2">
+            <div className="absolute left-[18px] top-1 bottom-1 w-px bg-ink-100" />
             {history.map((i) => (
-              <li key={i.id} className="relative rounded-xl border border-navy-100 p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    {i.status === "with_damage" ? <AlertTriangle size={16} className="text-rose-600" /> : <CheckCircle2 size={16} className="text-emerald-600" />}
+              <li key={i.id} className="relative pl-12">
+                <div
+                  className={`absolute left-3 top-3 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white shadow-sm ${
+                    i.status === "with_damage" ? "bg-danger-500 text-white" : "bg-success-500 text-white"
+                  }`}
+                >
+                  {i.status === "with_damage" ? <AlertTriangle size={11} /> : <CheckCircle2 size={11} />}
+                </div>
+                <div className="rounded-2xl border border-ink-100 bg-white p-4 transition-all hover:border-ink-900">
+                  <div className="flex items-start justify-between">
                     <div>
-                      <div className="text-sm font-semibold text-navy-900">
+                      <div className="font-display text-[14px] font-semibold text-ink-900">
                         {i.inspection_type === "exit" ? "Vistoria de Saída" : "Vistoria de Retorno"}
                       </div>
-                      <div className="text-xs text-navy-500">
-                        {format(new Date(i.performed_at), "dd MMM yyyy 'às' HH:mm", { locale: ptBR })}
+                      <div className="mt-0.5 font-mono text-[10.5px] uppercase tracking-wider text-ink-400">
+                        {format(new Date(i.performed_at), "dd MMM yyyy · HH:mm", { locale: ptBR })}
                         {i.inspector_name && ` · ${i.inspector_name}`}
                       </div>
                     </div>
+                    {i.photos.length > 0 && (
+                      <span className="badge bg-paper-100 text-ink-700">
+                        <ImageIcon size={11} /> {i.photos.length}
+                      </span>
+                    )}
                   </div>
+                  {i.notes && <p className="mt-2 text-[13px] text-ink-600">{i.notes}</p>}
+                  {i.damages.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      {i.damages.map((d) => <span key={d.id} className="chip text-[10.5px]">{d.area_code}</span>)}
+                    </div>
+                  )}
                   {i.photos.length > 0 && (
-                    <span className="badge bg-navy-50 text-navy-700"><ImageIcon size={11} /> {i.photos.length}</span>
+                    <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                      {i.photos.map((p) => (
+                        <a key={p.id} href={p.url ?? "#"} target="_blank" rel="noreferrer"
+                          className="block h-20 w-28 shrink-0 overflow-hidden rounded-xl bg-ink-100 transition-all hover:ring-2 hover:ring-ink-900">
+                          {p.url && <img src={p.url} className="h-full w-full object-cover" />}
+                        </a>
+                      ))}
+                    </div>
                   )}
                 </div>
-                {i.notes && <p className="mt-2 text-sm text-navy-600">{i.notes}</p>}
-                {i.damages.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {i.damages.map((d) => <span key={d.id} className="badge bg-amber-50 text-amber-700">{d.area_code}</span>)}
-                  </div>
-                )}
-                {i.photos.length > 0 && (
-                  <div className="mt-3 flex gap-2 overflow-x-auto">
-                    {i.photos.map((p) => (
-                      <a key={p.id} href={p.url ?? "#"} target="_blank" rel="noreferrer" className="block h-20 w-28 shrink-0 overflow-hidden rounded-lg bg-navy-50">
-                        {p.url && <img src={p.url} className="h-full w-full object-cover" />}
-                      </a>
-                    ))}
-                  </div>
-                )}
               </li>
             ))}
-            {history.length === 0 && <li className="py-8 text-center text-sm text-navy-400">Sem vistorias registradas.</li>}
+            {history.length === 0 && (
+              <li className="py-12 text-center text-[13px] text-ink-400">Sem vistorias registradas.</li>
+            )}
           </ol>
         </div>
       </div>
