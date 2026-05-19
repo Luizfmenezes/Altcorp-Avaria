@@ -10,6 +10,8 @@ class Inspection(Base):
     client_uuid = Column(String(64), nullable=True, unique=True, index=True)
     vehicle_id = Column(Integer, ForeignKey("vehicles.id", ondelete="CASCADE"), nullable=False, index=True)
     inspector_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    # Prefixo informado pelo inspetor no momento da vistoria (pode diferir do cadastro).
+    vehicle_prefix = Column(String(20), nullable=True)
     inspection_type = Column(String(20), nullable=False)
     status = Column(String(20), nullable=False, default="approved")
     notes = Column(Text, nullable=True)

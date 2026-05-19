@@ -1,8 +1,8 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str  # aceita username ou email — validação real é contra o banco
     password: str
 
 
@@ -15,7 +15,7 @@ class TokenResponse(BaseModel):
 class UserPublic(BaseModel):
     id: int
     name: str
-    email: EmailStr
+    email: str
     role: str
 
     class Config:

@@ -1,7 +1,7 @@
 import { FormEvent, useState } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
-import { Loader2, ArrowRight, Lock, Mail, ShieldCheck, Sparkles } from "lucide-react";
-import { api } from "../api/client";
+import { Loader2, ArrowRight, Lock, User, ShieldCheck, Sparkles } from "lucide-react";
+import { api, extractErrorMsg } from "../api/client";
 import { useAuth } from "../stores/auth";
 
 export function Login() {
@@ -10,8 +10,8 @@ export function Login() {
   const setAuth = useAuth((s) => s.setAuth);
   const logout = useAuth((s) => s.logout);
   const nav = useNavigate();
-  const [email, setEmail] = useState("admin@altcorp.com");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +31,7 @@ export function Login() {
       setAuth(data.access_token, data.user);
       nav("/");
     } catch (err: any) {
-      setError(err?.response?.data?.detail ?? "Não foi possível autenticar.");
+      setError(extractErrorMsg(err, "Não foi possível autenticar."));
     } finally {
       setLoading(false);
     }
@@ -123,28 +123,39 @@ export function Login() {
       </aside>
 
       {/* RIGHT FORM PANEL */}
-      <div className="relative flex flex-1 flex-col items-center justify-center p-6 sm:p-12">
+      <div className="relative flex flex-1 flex-col items-center justify-center p-4 sm:p-12">
         {/* Mobile brand */}
-        <div className="mb-8 flex items-center gap-3 lg:hidden">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-ink-900 p-1.5">
-            <img src="/altcorp-logo.png" alt="Altcorp" className="h-full w-full object-contain brightness-0 invert" />
+        <div className="mb-6 w-full max-w-[440px] lg:hidden">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-ink-900 p-1.5">
+              <img src="/altcorp-logo.png" alt="Altcorp" className="h-full w-full object-contain brightness-0 invert" />
+            </div>
+            <div>
+              <div className="font-display text-lg font-semibold tracking-tightest text-ink-900">Altcorp</div>
+              <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-ink-500">Avarias</div>
+            </div>
           </div>
-          <div>
-            <div className="font-display text-lg font-semibold tracking-tightest text-ink-900">Altcorp</div>
-            <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-ink-500">Avarias</div>
+          <div className="mt-4 rounded-[28px] border border-ink-100 bg-white px-5 py-4 shadow-card">
+            <div className="eyebrow">Acesso web</div>
+            <div className="mt-2 font-display text-[1.7rem] font-semibold leading-none tracking-tightest text-ink-900">
+              Gestão pronta para toque.
+            </div>
+            <p className="mt-3 text-[13px] leading-relaxed text-ink-500">
+              Consulte frota, heatmap e histórico operacional mesmo longe da mesa, com foco em leitura rápida no celular.
+            </p>
           </div>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="w-full max-w-[440px] animate-slide-up rounded-[32px] border border-ink-100 bg-white p-8 shadow-hero sm:p-10"
+          className="w-full max-w-[440px] animate-slide-up rounded-[28px] border border-ink-100 bg-white p-6 shadow-hero sm:rounded-[32px] sm:p-10"
         >
           <div className="mb-2 flex items-center gap-2">
             <span className="eyebrow">Acesso restrito</span>
             <span className="h-px flex-1 bg-ink-100" />
             <span className="font-mono text-[10px] text-ink-400">01 / 01</span>
           </div>
-          <h2 className="display text-3xl font-semibold leading-tight tracking-tightest text-ink-900">
+          <h2 className="display text-[2rem] font-semibold leading-tight tracking-tightest text-ink-900 sm:text-3xl">
             Bem-vindo de volta
           </h2>
           <p className="mt-1.5 text-[13.5px] text-ink-500">
@@ -153,17 +164,17 @@ export function Login() {
 
           <div className="mt-8 space-y-4">
             <div>
-              <label htmlFor="login-email" className="label-form">E-mail</label>
+              <label htmlFor="login-email" className="label-form">Usuário</label>
               <div className="relative">
-                <Mail size={15} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-300" />
+                <User size={15} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-300" />
                 <input
                   id="login-email"
-                  type="email"
+                  type="text"
                   required
+                  autoComplete="off"
                   className="input pl-11"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  autoFocus
                 />
               </div>
             </div>
@@ -201,39 +212,7 @@ export function Login() {
             </button>
           </div>
 
-          {/* Test accounts */}
-          <div className="mt-8 overflow-hidden rounded-2xl border border-ink-100 bg-paper-50">
-            <div className="flex items-center justify-between border-b border-ink-100 bg-white px-4 py-2.5">
-              <span className="eyebrow">Contas de teste</span>
-              <span className="font-mono text-[10px] text-ink-400">demo</span>
-            </div>
-            <div className="divide-y divide-ink-100 text-[12.5px]">
-              <button
-                type="button"
-                onClick={() => { setEmail("admin@altcorp.com"); setPassword("admin123"); }}
-                className="flex w-full items-center justify-between px-4 py-2.5 transition-colors hover:bg-white"
-              >
-                <span className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-lime-400" />
-                  <span className="font-semibold text-ink-900">Administrador</span>
-                </span>
-                <span className="font-mono text-ink-500">admin@altcorp.com</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setEmail("analista@altcorp.com"); setPassword("analista123"); }}
-                className="flex w-full items-center justify-between px-4 py-2.5 transition-colors hover:bg-white"
-              >
-                <span className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
-                  <span className="font-semibold text-ink-900">Analista</span>
-                </span>
-                <span className="font-mono text-ink-500">analista@altcorp.com</span>
-              </button>
-            </div>
-          </div>
-
-          <p className="mt-6 text-center text-[11px] text-ink-400">
+          <p className="mt-8 text-center text-[11px] text-ink-400">
             Inspetores acessam pelo <span className="font-semibold text-ink-700">app mobile</span> de vistoria.
           </p>
         </form>

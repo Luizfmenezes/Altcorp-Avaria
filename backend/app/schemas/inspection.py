@@ -32,6 +32,7 @@ class PhotoOut(BaseModel):
 class InspectionCreate(BaseModel):
     client_uuid: Optional[str] = None
     vehicle_plate: str
+    vehicle_prefix: Optional[str] = None
     inspection_type: str
     status: str = "approved"
     notes: Optional[str] = None
@@ -43,6 +44,7 @@ class InspectionOut(BaseModel):
     id: int
     vehicle_id: int
     vehicle_plate: Optional[str] = None
+    vehicle_prefix: Optional[str] = None
     vehicle_model: Optional[str] = None
     vehicle_type: Optional[str] = None
     vehicle_default_photo_url: Optional[str] = None

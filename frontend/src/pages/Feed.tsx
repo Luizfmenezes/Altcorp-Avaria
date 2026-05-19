@@ -31,6 +31,7 @@ export function Feed() {
   const token = useAuth((s) => s.token);
   const [items, setItems] = useState<FeedItem[]>([]);
   const [connected, setConnected] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
 
   // Filters — default to "today".
@@ -41,6 +42,10 @@ export function Feed() {
   const [month, setMonth] = useState(thisMonthISO());
 
   const isDefault = period === "today" && !prefix.trim() && !model.trim();
+
+  useEffect(() => {
+    if (!isDefault) setShowFilters(true);
+  }, [isDefault]);
 
   const load = useCallback(() => {
     const params: Record<string, string> = {};
@@ -120,87 +125,98 @@ export function Feed() {
 
       {/* Filter bar */}
       <div className="card p-4">
-        <div className="flex flex-wrap items-end gap-3">
+        <div className="flex items-center justify-between gap-3 sm:hidden">
           <div className="flex items-center gap-2 text-ink-500">
             <SlidersHorizontal size={15} />
             <span className="eyebrow">Filtros</span>
           </div>
+          <button type="button" onClick={() => setShowFilters((v) => !v)} className="btn-secondary px-3 py-2 text-[11px]">
+            {showFilters ? "Ocultar" : isDefault ? "Abrir" : "Editar"}
+          </button>
+        </div>
 
-          <div className="min-w-[140px] flex-1">
-            <label className="label-form">Prefixo</label>
-            <input
-              value={prefix}
-              onChange={(e) => setPrefix(e.target.value)}
-              placeholder="Ex. 1001"
-              className="input py-2.5 text-[14px]"
-            />
-          </div>
-
-          <div className="min-w-[160px] flex-1">
-            <label className="label-form">Marca / Modelo</label>
-            <input
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              placeholder="Ex. Volvo"
-              className="input py-2.5 text-[14px]"
-            />
-          </div>
-
-          <div className="min-w-[200px]">
-            <label className="label-form">Período</label>
-            <div className="flex items-center gap-1 rounded-full border border-ink-100 bg-paper-50 p-1">
-              {([
-                ["today", "Hoje"],
-                ["day", "Dia"],
-                ["month", "Mês"],
-                ["all", "Tudo"],
-              ] as [Period, string][]).map(([key, lbl]) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setPeriod(key)}
-                  className={`flex-1 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
-                    period === key ? "bg-ink-900 text-paper-50" : "text-ink-500 hover:text-ink-900"
-                  }`}
-                >
-                  {lbl}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {period === "day" && (
+        <div className={`${showFilters ? "mt-4 grid gap-3" : "hidden"} sm:grid sm:gap-3 sm:mt-0`}>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_280px_auto] xl:items-end">
             <div>
-              <label className="label-form">Data</label>
+              <label className="label-form">Prefixo</label>
               <input
-                type="date"
-                value={day}
-                onChange={(e) => setDay(e.target.value)}
+                value={prefix}
+                onChange={(e) => setPrefix(e.target.value)}
+                placeholder="Ex. 1001"
                 className="input py-2.5 text-[14px]"
               />
             </div>
-          )}
-          {period === "month" && (
+
             <div>
-              <label className="label-form">Mês</label>
+              <label className="label-form">Marca / Modelo</label>
               <input
-                type="month"
-                value={month}
-                onChange={(e) => setMonth(e.target.value)}
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                placeholder="Ex. Volvo"
                 className="input py-2.5 text-[14px]"
               />
             </div>
-          )}
 
-          {!isDefault && (
-            <button type="button" onClick={clearFilters} className="btn-secondary py-2.5">
-              <X size={14} /> Limpar
-            </button>
+            <div>
+              <label className="label-form">Período</label>
+              <div className="grid grid-cols-4 gap-1 rounded-[20px] border border-ink-100 bg-paper-50 p-1 sm:rounded-full">
+                {([
+                  ["today", "Hoje"],
+                  ["day", "Dia"],
+                  ["month", "Mês"],
+                  ["all", "Tudo"],
+                ] as [Period, string][]).map(([key, lbl]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setPeriod(key)}
+                    className={`rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
+                      period === key ? "bg-ink-900 text-paper-50" : "text-ink-500 hover:text-ink-900"
+                    }`}
+                  >
+                    {lbl}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {!isDefault && (
+              <button type="button" onClick={clearFilters} className="btn-secondary w-full py-2.5 xl:w-auto">
+                <X size={14} /> Limpar
+              </button>
+            )}
+          </div>
+
+          {(period === "day" || period === "month") && (
+            <div className="grid gap-3 sm:grid-cols-2 xl:max-w-[420px]">
+              {period === "day" && (
+                <div>
+                  <label className="label-form">Data</label>
+                  <input
+                    type="date"
+                    value={day}
+                    onChange={(e) => setDay(e.target.value)}
+                    className="input py-2.5 text-[14px]"
+                  />
+                </div>
+              )}
+              {period === "month" && (
+                <div>
+                  <label className="label-form">Mês</label>
+                  <input
+                    type="month"
+                    value={month}
+                    onChange={(e) => setMonth(e.target.value)}
+                    className="input py-2.5 text-[14px]"
+                  />
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
 
-      <div className="grid gap-5 stagger sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      <div className="grid gap-3 stagger md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 sm:gap-4 xl:gap-5">
         {items.map((it, idx) => {
           const damagePhoto = it.photos[0]?.url ?? null;
           // No inspection photo + no damage → fall back to the vehicle's default photo.
@@ -211,7 +227,7 @@ export function Feed() {
               key={it.id}
               className="group overflow-hidden rounded-[28px] border border-ink-100 bg-white shadow-card transition-all hover:-translate-y-1 hover:shadow-hero"
             >
-              <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink-900">
+              <div className="relative aspect-[5/3] w-full overflow-hidden bg-ink-900 sm:aspect-[4/3]">
                 {cover ? (
                   <img src={cover} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                 ) : (
@@ -254,7 +270,7 @@ export function Feed() {
                 )}
               </div>
 
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="font-mono text-sm font-bold tracking-wider text-ink-900">{it.vehicle_plate ?? "—"}</div>
@@ -289,7 +305,7 @@ export function Feed() {
         })}
 
         {items.length === 0 && (
-          <div className="col-span-full rounded-[28px] border border-dashed border-ink-200 bg-white p-16 text-center">
+          <div className="col-span-full rounded-[28px] border border-dashed border-ink-200 bg-white p-10 text-center sm:p-16">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-paper-100 text-ink-400">
               <Camera size={20} />
             </div>

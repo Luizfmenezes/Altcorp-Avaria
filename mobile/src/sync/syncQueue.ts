@@ -8,8 +8,10 @@ const SYNC_TAG = "inspection-sync";
 /** Nome do Web Lock — compartilhado entre abas E service worker. */
 const SYNC_LOCK = "altcorp-inspection-sync";
 
-/** Upload de foto em rede móvel lenta precisa de timeout maior. */
-const PHOTO_UPLOAD_TIMEOUT = 90_000;
+/** Upload de foto em rede móvel lenta precisa de timeout generoso (3 min). */
+const PHOTO_UPLOAD_TIMEOUT = 180_000;
+/** Após este número de falhas, a vistoria é bloqueada para correção manual. */
+const MAX_SYNC_ATTEMPTS = 10;
 /** POST da vistoria é JSON pequeno — timeout curto basta. */
 const INSPECTION_TIMEOUT = 30_000;
 
@@ -113,10 +115,22 @@ async function withSyncLock(run: () => Promise<void>): Promise<void> {
     await run();
     return;
   }
-  await locks.request(SYNC_LOCK, { ifAvailable: true }, async (lock) => {
-    if (!lock) return; // Outra aba / service worker já está sincronizando.
+  let acquired = false;
+  try {
+    await locks.request(SYNC_LOCK, { ifAvailable: true }, async (lock) => {
+      if (!lock) return; // Outra aba / service worker já está sincronizando.
+      acquired = true;
+      await run();
+    });
+  } catch {
+    // Web Locks falhou silenciosamente — roda direto como fallback.
     await run();
-  });
+    return;
+  }
+  if (!acquired) {
+    // Lock estava ocupado por outro contexto: reagenda um novo passe em breve.
+    globalThis.setTimeout(() => { void syncNow(); }, 2000);
+  }
 }
 
 export async function syncNow(): Promise<void> {
@@ -124,9 +138,11 @@ export async function syncNow(): Promise<void> {
   if (!navigator.onLine) return;
   if (!hasAuthToken()) return;
 
-  await persistRuntimeSettings();
+  // Marca a flag ANTES de qualquer await: evita que duas chamadas
+  // concorrentes passem pelo guard `if (running)` ao mesmo tempo.
   running = true;
   try {
+    await persistRuntimeSettings();
     await withSyncLock(runSyncPass);
   } finally {
     running = false;
@@ -156,6 +172,7 @@ async function runSyncPass(): Promise<void> {
         const { data } = await api.post("/api/v1/inspections", {
           client_uuid: item.uuid,
           vehicle_plate: item.vehicle_plate,
+          vehicle_prefix: item.vehicle_prefix,
           inspection_type: item.inspection_type,
           status: item.status,
           notes: item.notes,
@@ -184,12 +201,18 @@ async function runSyncPass(): Promise<void> {
       } catch (err: any) {
         const failure = classifySyncFailure(err);
         const attempts = (item.attempts ?? 0) + 1;
+        // Teto de tentativas: esgotado o limite, bloqueia para correção manual
+        // em vez de reentrar no filtro de retry indefinidamente.
+        const exhausted = attempts >= MAX_SYNC_ATTEMPTS;
+        const status = exhausted ? "blocked" : failure.status;
         await db.inspections.update(item.uuid, {
-          status_sync: failure.status,
+          status_sync: status,
           attempts,
-          last_error: failure.message,
+          last_error: exhausted
+            ? `${failure.message} (limite de ${MAX_SYNC_ATTEMPTS} tentativas atingido)`
+            : failure.message,
           // "blocked" exige correção manual — não agenda retry automático.
-          next_retry_at: failure.status === "failed" ? Date.now() + retryDelay(attempts) : undefined,
+          next_retry_at: status === "failed" ? Date.now() + retryDelay(attempts) : undefined,
         });
       } finally {
         setProgress({ completed: progress.completed + 1 });

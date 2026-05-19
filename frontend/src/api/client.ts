@@ -21,3 +21,14 @@ api.interceptors.response.use(
     return Promise.reject(err);
   }
 );
+
+/** Extrai mensagem legível de erro do backend (string | Pydantic array | objeto). */
+export function extractErrorMsg(err: any, fallback = "Erro inesperado"): string {
+  const detail = err?.response?.data?.detail;
+  if (!detail) return fallback;
+  if (Array.isArray(detail)) {
+    return detail.map((e: any) => e.msg ?? JSON.stringify(e)).join("; ");
+  }
+  if (typeof detail === "object") return JSON.stringify(detail);
+  return String(detail);
+}

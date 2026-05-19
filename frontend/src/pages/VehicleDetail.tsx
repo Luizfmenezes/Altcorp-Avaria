@@ -69,16 +69,16 @@ export function VehicleDetail() {
   const approvedInspections = history.length - damageInspections;
 
   return (
-    <div className="mx-auto max-w-[1480px] space-y-6">
+    <div className="mx-auto max-w-[1480px] space-y-4 sm:space-y-6">
       <Link to="/vehicles" className="btn-ghost">
         <ArrowLeft size={14} /> Voltar
       </Link>
 
       {vehicle && (
-        <div className="relative overflow-hidden rounded-[36px] bg-ink-900 p-8 text-paper-50 shadow-hero lg:p-12">
-          <div className="pointer-events-none absolute -right-32 -top-32 h-[420px] w-[420px] rounded-full bg-lime-400/10 blur-3xl" />
+        <div className="relative overflow-hidden rounded-[32px] bg-ink-900 p-5 text-paper-50 shadow-hero sm:p-8 lg:rounded-[36px] lg:p-12">
+          <div className="pointer-events-none absolute -right-32 -top-32 hidden h-[420px] w-[420px] rounded-full bg-lime-400/10 blur-3xl sm:block" />
           <div
-            className="pointer-events-none absolute inset-0 opacity-[0.08]"
+            className="pointer-events-none absolute inset-0 opacity-[0.06] sm:opacity-[0.08]"
             style={{
               backgroundImage:
                 "linear-gradient(to right, rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.18) 1px, transparent 1px)",
@@ -86,9 +86,9 @@ export function VehicleDetail() {
             }}
           />
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="flex gap-6">
+            <div className="flex gap-4 sm:gap-6">
               {vehicle.default_photo_url && (
-                <div className="hidden h-32 w-44 shrink-0 overflow-hidden rounded-3xl border border-white/15 sm:block">
+                <div className="hidden h-28 w-36 shrink-0 overflow-hidden rounded-3xl border border-white/15 sm:block lg:h-32 lg:w-44">
                   <img src={vehicle.default_photo_url} alt={vehicle.plate} className="h-full w-full object-cover" />
                 </div>
               )}
@@ -97,24 +97,24 @@ export function VehicleDetail() {
                   {isBus ? <Truck size={14} className="text-lime-400" /> : <Car size={14} className="text-lime-400" />}
                   <span className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-paper-50/70">Prontuário do veículo</span>
                 </div>
-                <h1 className="mt-5 font-mono text-[clamp(2.5rem,5vw,4rem)] font-bold tracking-wider leading-none text-paper-50">
+                <h1 className="mt-5 font-mono text-[2.4rem] font-bold tracking-wider leading-none text-paper-50 sm:text-[clamp(2.5rem,5vw,4rem)]">
                   {vehicle.plate}
                 </h1>
                 <div className="mt-3 font-display text-xl font-medium text-paper-50/85">{vehicle.model}</div>
-                <div className="mt-4 flex flex-wrap gap-4 text-[12px] text-paper-50/70">
+                <div className="mt-4 flex flex-wrap gap-3 text-[12px] text-paper-50/70 sm:gap-4">
                   <span className="inline-flex items-center gap-1.5"><Tag size={12} className="text-lime-400" /> Prefixo · {vehicle.prefix ?? "—"}</span>
                   <span className="inline-flex items-center gap-1.5"><Calendar size={12} className="text-lime-400" /> {vehicle.year ?? "—"}</span>
                   <span className="inline-flex items-center gap-1.5"><Hash size={12} className="text-lime-400" /> ID #{vehicle.id}</span>
                 </div>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-lime-400/30 bg-lime-400/10 px-4 py-2 text-[10.5px] font-semibold uppercase tracking-wider text-lime-300">
                 {isBus ? <Truck size={12} /> : <Car size={12} />}
                 {isBus ? "Ônibus" : "Carro"}
               </span>
               {isBus && (
-                <button type="button" onClick={() => setShowMap(true)} className="btn-lime">
+                <button type="button" onClick={() => setShowMap(true)} className="btn-lime w-full sm:w-auto">
                   <MapPin size={14} /> Ver no mapa
                 </button>
               )}
@@ -124,7 +124,7 @@ export function VehicleDetail() {
       )}
 
       {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-3 stagger">
+      <div className="grid gap-3 sm:grid-cols-3 sm:gap-4 stagger">
         <div className="card p-5">
           <div className="eyebrow">Total de vistorias</div>
           <div className="mt-2 stat-num text-3xl font-medium text-ink-900">{history.length}</div>
@@ -140,47 +140,54 @@ export function VehicleDetail() {
       </div>
 
       {/* History filter */}
-      <div className="card flex flex-wrap items-end gap-3 p-4">
-        <div>
-          <label className="label-form">Recorte do histórico</label>
-          <div className="flex items-center gap-1 rounded-full border border-ink-100 bg-paper-50 p-1">
-            {([
-              ["all", "Tudo"],
-              ["last", "Últimas saídas"],
-              ["month", "Ver mês"],
-              ["day", "Ver dia"],
-            ] as [Period, string][]).map(([key, lbl]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setPeriod(key)}
-                className={`rounded-full px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
-                  period === key ? "bg-ink-900 text-paper-50" : "text-ink-500 hover:text-ink-900"
-                }`}
-              >
-                {lbl}
-              </button>
-            ))}
+      <div className="card p-4 sm:p-5">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3">
+            <div>
+              <label className="label-form">Recorte do histórico</label>
+              <div className="grid grid-cols-2 gap-1 rounded-[20px] border border-ink-100 bg-paper-50 p-1 sm:grid-cols-4 sm:rounded-full">
+                {([
+                  ["all", "Tudo"],
+                  ["last", "Últimas saídas"],
+                  ["month", "Ver mês"],
+                  ["day", "Ver dia"],
+                ] as [Period, string][]).map(([key, lbl]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setPeriod(key)}
+                    className={`rounded-full px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
+                      period === key ? "bg-ink-900 text-paper-50" : "text-ink-500 hover:text-ink-900"
+                    }`}
+                  >
+                    {lbl}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
-        {period === "day" && (
-          <div>
-            <label className="label-form">Data</label>
-            <input type="date" value={day} onChange={(e) => setDay(e.target.value)} className="input py-2.5 text-[14px]" />
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            {period === "day" && (
+              <div>
+                <label className="label-form">Data</label>
+                <input type="date" value={day} onChange={(e) => setDay(e.target.value)} className="input py-2.5 text-[14px]" />
+              </div>
+            )}
+            {period === "month" && (
+              <div>
+                <label className="label-form">Mês</label>
+                <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="input py-2.5 text-[14px]" />
+              </div>
+            )}
+            <div className="font-mono text-[11px] text-ink-400 sm:pb-3">
+              {history.length} {history.length === 1 ? "registro" : "registros"}
+            </div>
           </div>
-        )}
-        {period === "month" && (
-          <div>
-            <label className="label-form">Mês</label>
-            <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="input py-2.5 text-[14px]" />
-          </div>
-        )}
-        <div className="ml-auto self-center font-mono text-[11px] text-ink-400">
-          {history.length} {history.length === 1 ? "registro" : "registros"}
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         <div>
           <div className="mb-3 flex items-end justify-between">
             <div>
@@ -191,7 +198,7 @@ export function VehicleDetail() {
           <VehicleSilhouette counts={counts} compact vehicleType={vType} onShow3D={() => setShow3d(true)} />
         </div>
 
-        <div className="card p-6">
+        <div className="card p-4 sm:p-6">
           <div className="mb-4 flex items-end justify-between">
             <div>
               <div className="eyebrow">Histórico</div>
@@ -199,7 +206,7 @@ export function VehicleDetail() {
               <p className="text-[12.5px] text-ink-500">{history.length} registros</p>
             </div>
           </div>
-          <ol className="relative max-h-[36rem] space-y-4 overflow-y-auto pr-2">
+          <ol className="relative space-y-4 lg:max-h-[36rem] lg:overflow-y-auto lg:pr-2">
             <div className="absolute left-[18px] top-1 bottom-1 w-px bg-ink-100" />
             {history.map((i) => (
               <li key={i.id} className="relative pl-12">
@@ -211,7 +218,7 @@ export function VehicleDetail() {
                   {i.status === "with_damage" ? <AlertTriangle size={11} /> : <CheckCircle2 size={11} />}
                 </div>
                 <div className="rounded-2xl border border-ink-100 bg-white p-4 transition-all hover:border-ink-900">
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <div className="font-display text-[14px] font-semibold text-ink-900">
                         {i.inspection_type === "exit" ? "Vistoria de Saída" : "Vistoria de Retorno"}
@@ -237,7 +244,7 @@ export function VehicleDetail() {
                     <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
                       {i.photos.map((p) => (
                         <a key={p.id} href={p.url ?? "#"} target="_blank" rel="noreferrer"
-                          className="block h-20 w-28 shrink-0 overflow-hidden rounded-xl bg-ink-100 transition-all hover:ring-2 hover:ring-ink-900">
+                          className="block h-16 w-24 shrink-0 overflow-hidden rounded-xl bg-ink-100 transition-all hover:ring-2 hover:ring-ink-900 sm:h-20 sm:w-28">
                           {p.url && <img src={p.url} className="h-full w-full object-cover" />}
                         </a>
                       ))}

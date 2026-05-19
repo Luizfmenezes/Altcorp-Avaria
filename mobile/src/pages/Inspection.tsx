@@ -36,6 +36,7 @@ export function Inspection() {
   const inspectionType = type === "return" ? "return" : "exit";
   const nav = useNavigate();
   const [plate, setPlate] = useState("");
+  const [prefix, setPrefix] = useState("");
   const [notes, setNotes] = useState("");
   const [damages, setDamages] = useState<DamageDraft[]>([]);
   const [saving, setSaving] = useState(false);
@@ -43,6 +44,7 @@ export function Inspection() {
   const fileRef = useRef<HTMLInputElement>(null);
   const activeDamageRef = useRef<string | null>(null);
   const plateInputId = "inspection-plate";
+  const prefixInputId = "inspection-prefix";
   const notesInputId = "inspection-notes";
 
   function addArea(area: { code: string; label: string }, x: number, y: number) {
@@ -88,7 +90,7 @@ export function Inspection() {
   }
 
   async function save() {
-    if (!plate.trim()) { setError("Informe a placa do veículo."); return; }
+    if (!prefix.trim()) { setError("Informe o prefixo do veículo."); return; }
     setSaving(true);
     setError(null);
     try {
@@ -97,7 +99,8 @@ export function Inspection() {
       );
       await db.inspections.put({
         uuid: uuid(),
-        vehicle_plate: plate.toUpperCase().trim(),
+        vehicle_plate: prefix.toUpperCase().trim(),
+        vehicle_prefix: prefix.toUpperCase().trim(),
         inspection_type: inspectionType,
         status: damages.length > 0 ? "with_damage" : "approved",
         notes: notes || undefined,
@@ -136,15 +139,18 @@ export function Inspection() {
 
       <main className="flex-1 space-y-4 p-4 pb-32">
         <div className="card p-4 animate-fade-in">
-          <label htmlFor={plateInputId} className="label-form">Placa</label>
+          <label htmlFor={prefixInputId} className="label-form">Prefixo do Veículo</label>
           <input
-            id={plateInputId}
-            value={plate}
-            onChange={(e) => setPlate(e.target.value.toUpperCase())}
-            placeholder="ABC1D23"
+            id={prefixInputId}
+            value={prefix}
+            onChange={(e) => setPrefix(e.target.value.toUpperCase())}
+            placeholder="Prefixo do veículo"
             autoCapitalize="characters"
             className="input font-mono text-2xl font-bold tracking-widest"
           />
+          <p className="mt-2 text-xs text-ink-400">
+            {inspectionType === "exit" ? "Vistoria de saída" : "Vistoria de retorno"} — identifique o veículo pelo prefixo.
+          </p>
         </div>
 
         <div className="card p-4">

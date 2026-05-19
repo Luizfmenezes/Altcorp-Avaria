@@ -9,6 +9,7 @@ declare let self: ServiceWorkerGlobalScope;
 type PendingInspection = {
   uuid: string;
   vehicle_plate: string;
+  vehicle_prefix?: string;
   inspection_type: "exit" | "return";
   status: "approved" | "with_damage";
   notes?: string;
@@ -44,14 +45,16 @@ type SyncFailureError = Error & {
 
 const DB_NAME = "altcorp-avarias";
 // Deve casar com a maior versão declarada em src/db/dexie.ts.
-const DB_VERSION = 2;
+const DB_VERSION = 20;
 const INSPECTIONS_STORE = "inspections";
 const SETTINGS_STORE = "settings";
 const SYNC_TAG = "inspection-sync";
 // Mesmo nome do Web Lock usado em syncQueue.ts — serializa página + SW.
 const SYNC_LOCK = "altcorp-inspection-sync";
 const INSPECTION_TIMEOUT = 30_000;
-const PHOTO_UPLOAD_TIMEOUT = 90_000;
+const PHOTO_UPLOAD_TIMEOUT = 180_000;
+// Após este número de falhas, a vistoria é bloqueada para correção manual.
+const MAX_SYNC_ATTEMPTS = 10;
 
 self.skipWaiting();
 clientsClaim();
@@ -236,6 +239,7 @@ async function runSyncPass(): Promise<void> {
             body: JSON.stringify({
               client_uuid: item.uuid,
               vehicle_plate: item.vehicle_plate,
+              vehicle_prefix: item.vehicle_prefix,
               inspection_type: item.inspection_type,
               status: item.status,
               notes: item.notes,
@@ -287,13 +291,17 @@ async function runSyncPass(): Promise<void> {
         const message = failure.name === "AbortError"
           ? "Tempo de envio esgotado — tentaremos novamente."
           : failure.message || "Falha ao sincronizar em background.";
-        const blocked = isPermanentFailure(failure.status);
         const attempts = (item.attempts ?? 0) + 1;
+        // Teto de tentativas: esgotado o limite, bloqueia para correção manual.
+        const exhausted = attempts >= MAX_SYNC_ATTEMPTS;
+        const blocked = isPermanentFailure(failure.status) || exhausted;
         await putInspection(database, {
           ...item,
           status_sync: blocked ? "blocked" : "failed",
           attempts,
-          last_error: message,
+          last_error: exhausted
+            ? `${message} (limite de ${MAX_SYNC_ATTEMPTS} tentativas atingido)`
+            : message,
           next_retry_at: blocked ? undefined : Date.now() + retryDelay(attempts),
         });
       }

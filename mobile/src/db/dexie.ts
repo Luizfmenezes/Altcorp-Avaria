@@ -3,6 +3,7 @@ import Dexie, { Table } from "dexie";
 export interface PendingInspection {
   uuid: string;
   vehicle_plate: string;
+  vehicle_prefix?: string;
   inspection_type: "exit" | "return";
   status: "approved" | "with_damage";
   notes?: string;
@@ -33,7 +34,7 @@ class AppDB extends Dexie {
     this.version(1).stores({
       inspections: "uuid, status_sync, created_at",
     });
-    this.version(2).stores({
+    this.version(20).stores({
       inspections: "uuid, status_sync, created_at",
       settings: "key",
     });

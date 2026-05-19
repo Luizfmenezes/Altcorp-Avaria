@@ -111,14 +111,14 @@ export function Dashboard() {
   }
 
   return (
-    <div className="mx-auto max-w-[1480px] space-y-10">
+    <div className="mx-auto max-w-[1480px] space-y-6 sm:space-y-8 lg:space-y-10">
       {/* HERO */}
-      <section className="grid gap-6 lg:grid-cols-[1fr_420px]">
-        <div className="relative overflow-hidden rounded-[36px] bg-ink-900 p-8 text-paper-50 shadow-hero lg:p-12">
-          <div className="pointer-events-none absolute -right-32 -top-32 h-[420px] w-[420px] rounded-full bg-lime-400/12 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-40 -left-20 h-[320px] w-[320px] rounded-full bg-brand-500/10 blur-3xl" />
+      <section className="grid gap-4 lg:grid-cols-[1fr_420px] lg:gap-6">
+        <div className="relative overflow-hidden rounded-[32px] bg-ink-900 p-5 text-paper-50 shadow-hero sm:p-8 lg:rounded-[36px] lg:p-12">
+          <div className="pointer-events-none absolute -right-32 -top-32 hidden h-[420px] w-[420px] rounded-full bg-lime-400/12 blur-3xl sm:block" />
+          <div className="pointer-events-none absolute -bottom-40 -left-20 hidden h-[320px] w-[320px] rounded-full bg-brand-500/10 blur-3xl sm:block" />
           <div
-            className="pointer-events-none absolute inset-0 opacity-[0.08]"
+            className="pointer-events-none absolute inset-0 opacity-[0.06] sm:opacity-[0.08]"
             style={{
               backgroundImage:
                 "linear-gradient(to right, rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.18) 1px, transparent 1px)",
@@ -139,11 +139,11 @@ export function Dashboard() {
             <p className="mt-5 max-w-md text-[14.5px] leading-relaxed text-paper-50/65">
               Visão consolidada de vistorias, ocorrências e KPIs da frota corporativa.
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <button onClick={exportSummary} disabled={!metrics} className="btn-lime">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+              <button onClick={exportSummary} disabled={!metrics} className="btn-lime w-full sm:w-auto">
                 <Download size={14} /> Exportar relatório
               </button>
-              <Link to="/feed" className="btn-secondary border-white/20 bg-white/10 text-paper-50 hover:bg-white/15 hover:border-white/40">
+              <Link to="/feed" className="btn-secondary w-full border-white/20 bg-white/10 text-paper-50 hover:bg-white/15 hover:border-white/40 sm:w-auto">
                 <ArrowUpRight size={14} /> Ver feed
               </Link>
             </div>
@@ -151,7 +151,7 @@ export function Dashboard() {
         </div>
 
         {/* Fleet card */}
-        <div className="relative overflow-hidden rounded-[36px] bg-lime-400 p-8 text-ink-900 shadow-glow">
+        <div className="relative overflow-hidden rounded-[32px] bg-lime-400 p-5 text-ink-900 shadow-glow sm:p-8 lg:rounded-[36px]">
           <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full border-2 border-ink-900/10" />
           <div className="pointer-events-none absolute -bottom-16 -right-16 h-56 w-56 rounded-full border-2 border-ink-900/10" />
           <div className="relative flex h-full flex-col">
@@ -166,8 +166,8 @@ export function Dashboard() {
                 <Truck size={18} />
               </div>
             </div>
-            <div className="mt-8 flex items-baseline gap-2">
-              <div className="stat-num text-[88px] font-medium leading-none">{metrics?.total_vehicles ?? "—"}</div>
+            <div className="mt-6 flex items-baseline gap-2 sm:mt-8">
+              <div className="stat-num text-[64px] font-medium leading-none sm:text-[88px]">{metrics?.total_vehicles ?? "—"}</div>
               <div className="font-mono text-[11px] uppercase tracking-wider text-ink-700">unidades</div>
             </div>
             <div className="mt-auto pt-8">
@@ -185,14 +185,14 @@ export function Dashboard() {
 
       {/* INDICATOR STRIP */}
       <section>
-        <div className="mb-5 flex items-end justify-between">
+        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="eyebrow">Indicadores chave</div>
             <h2 className="display mt-1 text-2xl font-semibold text-ink-900">Performance dos últimos 7 dias</h2>
           </div>
           <span className="hidden font-mono text-[11px] text-ink-400 md:inline">atualizado · agora</span>
         </div>
-        <div className="grid gap-4 stagger md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 stagger sm:grid-cols-2 xl:grid-cols-4 sm:gap-4">
           <StatCard label="Vistorias (7d)" value={metrics?.inspections_week ?? 0} icon={ClipboardCheck} hint="Total registrado" variant="ink" />
           <StatCard label="Avarias (7d)"   value={metrics?.vehicles_with_damage_week ?? 0} icon={AlertTriangle} hint="Veículos comprometidos" variant="lime" />
           <StatCard label="Mês corrente"   value={metrics?.damages_month ?? 0} icon={TrendingUp} hint="Avarias acumuladas" variant="paper" />
@@ -203,14 +203,14 @@ export function Dashboard() {
       {/* CHARTS */}
       <section className="grid gap-6 lg:grid-cols-3">
         {/* Daily inspections — large */}
-        <div className="card overflow-hidden p-7 lg:col-span-2">
-          <div className="flex items-start justify-between gap-3">
+        <div className="card overflow-hidden p-4 sm:p-7 lg:col-span-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="eyebrow">Volume diário</div>
               <h3 className="display mt-1 text-xl font-semibold text-ink-900">Vistorias por dia</h3>
               <p className="mt-1 text-[13px] text-ink-500">Tendência do mês corrente · média {avgDaily}/dia</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="chip">
                 <span className="h-2 w-2 rounded-full bg-lime-400" />
                 Total
@@ -220,7 +220,7 @@ export function Dashboard() {
               </button>
             </div>
           </div>
-          <div className="mt-8 h-72">
+          <div className="mt-6 h-[240px] sm:mt-8 sm:h-72">
             <ResponsiveContainer>
               <AreaChart data={metrics?.daily ?? []} margin={{ left: -12, top: 12, right: 8, bottom: 0 }}>
                 <defs>
@@ -252,7 +252,7 @@ export function Dashboard() {
         </div>
 
         {/* Top critical */}
-        <div className="card relative overflow-hidden p-7">
+        <div className="card relative overflow-hidden p-4 sm:p-7">
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="eyebrow">Ranking</div>
@@ -301,7 +301,7 @@ export function Dashboard() {
 
       {/* SECONDARY CHART */}
       <section className="grid gap-6 lg:grid-cols-3">
-        <div className="card overflow-hidden p-7 lg:col-span-3">
+        <div className="card overflow-hidden p-4 sm:p-7 lg:col-span-3">
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="eyebrow">Distribuição</div>
@@ -309,7 +309,7 @@ export function Dashboard() {
               <p className="mt-1 text-[13px] text-ink-500">Comparativo entre os mais críticos da frota</p>
             </div>
           </div>
-          <div className="mt-6 h-64">
+          <div className="mt-6 h-[240px] sm:h-64">
             <ResponsiveContainer>
               <BarChart data={top} margin={{ left: -10, top: 8, right: 8 }}>
                 <CartesianGrid strokeDasharray="3 4" stroke="#e7ecf6" vertical={false} />

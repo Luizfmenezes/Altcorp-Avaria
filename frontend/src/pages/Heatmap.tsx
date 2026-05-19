@@ -20,7 +20,7 @@ export function Heatmap() {
   const hottest = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
 
   return (
-    <div className="mx-auto max-w-[1480px] space-y-8">
+    <div className="mx-auto max-w-[1480px] space-y-6 sm:space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="eyebrow">Inteligência operacional</div>
@@ -37,16 +37,16 @@ export function Heatmap() {
         </span>
       </div>
 
-      <div className="grid gap-5 stagger md:grid-cols-3">
-        <div className="card overflow-hidden p-6">
+      <div className="grid gap-4 stagger sm:grid-cols-2 xl:grid-cols-3 sm:gap-5">
+        <div className="card overflow-hidden p-5 sm:p-6">
           <div className="flex items-center justify-between">
             <span className="eyebrow">Impactos totais</span>
             <Activity size={14} className="text-ink-400" />
           </div>
-          <div className="mt-4 stat-num text-5xl font-medium text-ink-900">{total}</div>
+          <div className="mt-4 stat-num text-4xl font-medium text-ink-900 sm:text-5xl">{total}</div>
           <div className="mt-2 text-[12px] text-ink-500">Acumulado em toda a frota</div>
         </div>
-        <div className="card overflow-hidden p-6">
+        <div className="card overflow-hidden p-5 sm:p-6">
           <div className="flex items-center justify-between">
             <span className="eyebrow">Área crítica</span>
             <AlertOctagon size={14} className="text-danger-500" />
@@ -58,12 +58,12 @@ export function Heatmap() {
             {hottest ? `${hottest[1]} ocorrências` : "Sem dados"}
           </div>
         </div>
-        <div className="card overflow-hidden bg-ink-900 p-6 text-paper-50">
+        <div className="card overflow-hidden bg-ink-900 p-5 text-paper-50 sm:col-span-2 sm:p-6 xl:col-span-1">
           <div className="flex items-center justify-between">
             <span className="eyebrow text-paper-50/60">Regiões com impacto</span>
             <Flame size={14} className="text-lime-400" />
           </div>
-          <div className="mt-4 stat-num text-5xl font-medium">{Object.keys(counts).length}</div>
+          <div className="mt-4 stat-num text-4xl font-medium sm:text-5xl">{Object.keys(counts).length}</div>
           <div className="mt-2 text-[12px] text-paper-50/60">de regiões cadastradas</div>
         </div>
       </div>

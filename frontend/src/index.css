@@ -12,7 +12,11 @@
   }
 
   html, body, #root { height: 100%; }
-  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  html {
+    color-scheme: light;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
   body {
     font-family: 'Inter Tight', Inter, system-ui, sans-serif;
     font-feature-settings: "ss01", "cv11";
@@ -23,6 +27,7 @@
       radial-gradient(var(--grid) 1px, transparent 1px);
     background-size: 28px 28px;
     background-position: 0 0, 14px 14px;
+    overscroll-behavior-y: none;
   }
 
   ::selection { background-color: var(--lime); color: var(--ink); }
@@ -38,37 +43,37 @@
   }
 
   .btn-primary {
-    @apply relative inline-flex items-center justify-center gap-2 rounded-full bg-ink-900 px-6 py-3.5 text-[13px] font-semibold tracking-wide text-paper-50 shadow-card transition-all duration-300 hover:bg-ink-800 hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0 disabled:opacity-40 disabled:hover:translate-y-0;
+    @apply relative inline-flex items-center justify-center gap-2 rounded-full bg-ink-900 px-4 py-3 text-[12.5px] font-semibold tracking-wide text-paper-50 shadow-card transition-all duration-300 hover:bg-ink-800 hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0 disabled:opacity-40 disabled:hover:translate-y-0 sm:px-6 sm:py-3.5 sm:text-[13px];
   }
   .btn-lime {
-    @apply relative inline-flex items-center justify-center gap-2 rounded-full bg-lime-400 px-6 py-3.5 text-[13px] font-bold uppercase tracking-[0.14em] text-ink-900 shadow-glow transition-all duration-300 hover:bg-lime-300 active:scale-[0.98];
+    @apply relative inline-flex items-center justify-center gap-2 rounded-full bg-lime-400 px-4 py-3 text-[12px] font-bold uppercase tracking-[0.14em] text-ink-900 shadow-glow transition-all duration-300 hover:bg-lime-300 active:scale-[0.98] sm:px-6 sm:py-3.5 sm:text-[13px];
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-ink-200 bg-white px-5 py-3 text-[13px] font-semibold text-ink-900 transition-all hover:border-ink-900 hover:-translate-y-0.5 active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-ink-200 bg-white px-4 py-3 text-[12.5px] font-semibold text-ink-900 transition-all hover:border-ink-900 hover:-translate-y-0.5 active:scale-[0.98] sm:px-5 sm:text-[13px];
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-3.5 py-2 text-[13px] font-semibold text-ink-600 transition-all hover:bg-ink-50 hover:text-ink-900;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-3 py-2 text-[12.5px] font-semibold text-ink-600 transition-all hover:bg-ink-50 hover:text-ink-900 sm:px-3.5 sm:text-[13px];
   }
   .input {
-    @apply w-full rounded-2xl border border-ink-100 bg-white px-4 py-3.5 text-[15px] text-ink-900 placeholder:text-ink-300 outline-none transition-all focus:border-ink-900 focus:ring-4 focus:ring-ink-900/5;
+    @apply w-full rounded-2xl border border-ink-100 bg-white px-4 py-3 text-[15px] text-ink-900 placeholder:text-ink-300 outline-none transition-all focus:border-ink-900 focus:ring-4 focus:ring-ink-900/5 sm:py-3.5;
   }
   .input-mono {
     @apply input font-mono tracking-widest;
   }
   .card {
-    @apply rounded-[28px] border border-ink-100/80 bg-white shadow-card;
+    @apply rounded-[24px] border border-ink-100/80 bg-white shadow-card sm:rounded-[28px];
   }
   .card-ink {
-    @apply rounded-[28px] bg-ink-900 text-paper-50 shadow-hero relative overflow-hidden;
+    @apply rounded-[24px] bg-ink-900 text-paper-50 shadow-hero relative overflow-hidden sm:rounded-[28px];
   }
   .card-lime {
-    @apply rounded-[28px] bg-lime-400 text-ink-900 shadow-glow relative overflow-hidden;
+    @apply rounded-[24px] bg-lime-400 text-ink-900 shadow-glow relative overflow-hidden sm:rounded-[28px];
   }
   .badge {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-[0.08em];
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] sm:text-[10.5px];
   }
   .label-form {
-    @apply mb-2 block text-[10.5px] font-semibold uppercase tracking-[0.22em] text-ink-400;
+    @apply mb-2 block text-[10px] font-semibold uppercase tracking-[0.22em] text-ink-400 sm:text-[10.5px];
   }
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-full border border-ink-100 bg-white px-3 py-1.5 text-xs font-medium text-ink-700;
@@ -121,6 +126,13 @@
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 640px) {
+  body {
+    background-size: 24px 24px;
+    background-position: 0 0, 12px 12px;
+  }
 }
 
 .hide-scrollbar::-webkit-scrollbar { display: none; }

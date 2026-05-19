@@ -126,7 +126,7 @@ export function Sidebar() {
       </aside>
 
       {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-ink-100/60 bg-white/95 px-2 py-2 pb-6 shadow-[0_-8px_32px_rgba(10,10,12,0.06)] backdrop-blur-xl lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around gap-1 border-t border-ink-100/60 bg-white/95 px-3 py-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-8px_32px_rgba(10,10,12,0.06)] backdrop-blur-xl lg:hidden">
         {items
           .filter((i) => i.roles.includes(role))
           .map(({ to, label, icon: Icon }) => (
@@ -136,7 +136,7 @@ export function Sidebar() {
               end={to === "/"}
               className={({ isActive }) =>
                 clsx(
-                  "flex flex-col items-center gap-1 p-1.5 transition-all",
+                  "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl p-1.5 transition-all",
                   isActive ? "text-ink-900" : "text-ink-400"
                 )
               }
@@ -151,7 +151,7 @@ export function Sidebar() {
                   >
                     <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
                   </div>
-                  <span className={clsx("text-[9.5px] uppercase tracking-wider transition-all", isActive ? "font-bold" : "font-medium")}>
+                  <span className={clsx("truncate text-[9px] uppercase tracking-wider transition-all sm:text-[9.5px]", isActive ? "font-bold" : "font-medium")}>
                     {label}
                   </span>
                 </>

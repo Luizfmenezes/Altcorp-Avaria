@@ -139,11 +139,11 @@ export function VehicleSilhouette({
       />
 
       {/* Header */}
-      <div className="relative flex items-start justify-between gap-3 px-6 pt-6">
+      <div className="relative flex flex-col gap-3 px-4 pt-4 sm:px-6 sm:pt-6 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="eyebrow text-ink-500">Mapa de avarias</div>
           <div className="mt-1 flex items-baseline gap-2">
-            <div className="display text-2xl font-semibold text-ink-900">
+            <div className="display text-xl font-semibold text-ink-900 sm:text-2xl">
               {vehicleType === "car" ? "Carro" : "Ônibus"} · {VIEW_LABELS[view]}
             </div>
             {totalHits > 0 && (
@@ -151,7 +151,7 @@ export function VehicleSilhouette({
             )}
           </div>
         </div>
-        <div className="flex items-center gap-1 rounded-full border border-ink-100 bg-white p-1 shadow-sm">
+        <div className="grid w-full grid-cols-3 gap-1 rounded-[20px] border border-ink-100 bg-white p-1 shadow-sm sm:w-auto sm:auto-cols-max sm:grid-flow-col sm:rounded-full">
           {(["side", "top", "rear"] as const).map((v) => (
             <button
               key={v}
@@ -168,10 +168,10 @@ export function VehicleSilhouette({
       </div>
 
       {/* Illustration */}
-      <div className="relative px-6 py-4">
+      <div className="relative px-3 py-3 sm:px-6 sm:py-4">
         <svg
           viewBox="0 0 320 180"
-          className={`w-full ${compact ? "h-44" : "h-72"} drop-shadow-[0_24px_30px_rgba(10,10,12,0.10)]`}
+          className={`w-full ${compact ? "h-40 sm:h-44" : "h-56 sm:h-72"} drop-shadow-[0_24px_30px_rgba(10,10,12,0.10)]`}
           preserveAspectRatio="xMidYMid meet"
         >
           <defs>
@@ -265,7 +265,7 @@ export function VehicleSilhouette({
         </svg>
 
         {hovered && (
-          <div className="pointer-events-none absolute left-6 top-4 rounded-2xl border border-ink-100 bg-white px-3 py-2 text-xs shadow-card animate-fade-in">
+          <div className="pointer-events-none absolute left-3 top-3 rounded-2xl border border-ink-100 bg-white px-3 py-2 text-xs shadow-card animate-fade-in sm:left-6 sm:top-4">
             <div className="font-mono text-[10px] uppercase tracking-wider text-ink-400">Região</div>
             <div className="font-semibold text-ink-900">{areaLabel(hovered)}</div>
             <div className="mt-0.5 text-[11px] text-ink-500">
@@ -276,17 +276,17 @@ export function VehicleSilhouette({
       </div>
 
       {/* Legend */}
-      <div className="relative border-t border-ink-100 bg-white/60 px-6 py-4 backdrop-blur-sm">
+      <div className="relative border-t border-ink-100 bg-white/60 px-4 py-4 backdrop-blur-sm sm:px-6">
         {onShow3D && (
           <div className="mb-3 flex justify-end">
-            <button type="button" onClick={onShow3D} className="group btn-primary">
+            <button type="button" onClick={onShow3D} className="group btn-primary w-full sm:w-auto">
               <Box size={14} className="transition-transform duration-300 group-hover:rotate-[20deg]" />
               Ver modelo 3D
               <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-lime-400" />
             </button>
           </div>
         )}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <div className="flex items-center gap-3 text-[11px] text-ink-500">
             <span className="eyebrow text-ink-400">Intensidade</span>
             <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-lime-400" /> Baixa</span>

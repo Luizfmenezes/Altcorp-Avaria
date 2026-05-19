@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:5174"
 
     SEED_ADMIN_EMAIL: str = "admin@altcorp.com"
-    SEED_ADMIN_PASSWORD: str = "admin123"
+    SEED_ADMIN_PASSWORD: str = "REDACTED"
 
     # SPTrans Olho Vivo — token obtido em https://www.sptrans.com.br/desenvolvedores/
     OLHOVIVO_TOKEN: str = ""

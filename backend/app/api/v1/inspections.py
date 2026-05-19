@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 from typing import List, Optional
 import json, asyncio
 from datetime import datetime, date, timedelta
@@ -23,6 +23,7 @@ def _serialize(i: Inspection) -> InspectionOut:
         id=i.id,
         vehicle_id=i.vehicle_id,
         vehicle_plate=i.vehicle.plate if i.vehicle else None,
+        vehicle_prefix=i.vehicle_prefix or (i.vehicle.prefix if i.vehicle else None),
         vehicle_model=i.vehicle.model if i.vehicle else None,
         vehicle_type=i.vehicle.vehicle_type if i.vehicle else None,
         vehicle_default_photo_url=(
@@ -106,9 +107,13 @@ async def create_inspection(
     db: Session = Depends(get_db),
     user: User = Depends(require_inspector),
 ):
-    vehicle = db.query(Vehicle).filter(Vehicle.plate == payload.vehicle_plate.upper().strip()).first()
+    identifier = payload.vehicle_plate.upper().strip()
+    # Busca por prefixo primeiro, depois por placa
+    vehicle = db.query(Vehicle).filter(
+        (Vehicle.prefix == identifier) | (Vehicle.plate == identifier)
+    ).first()
     if not vehicle:
-        raise HTTPException(404, f"Placa {payload.vehicle_plate} não cadastrada")
+        raise HTTPException(404, f"Veículo com prefixo/placa {identifier} não cadastrado")
 
     if payload.client_uuid:
         existing = db.query(Inspection).filter(Inspection.client_uuid == payload.client_uuid).first()
@@ -119,6 +124,7 @@ async def create_inspection(
         client_uuid=payload.client_uuid,
         vehicle_id=vehicle.id,
         inspector_id=user.id,
+        vehicle_prefix=(payload.vehicle_prefix or "").strip() or vehicle.prefix,
         inspection_type=payload.inspection_type,
         status=payload.status,
         notes=payload.notes,

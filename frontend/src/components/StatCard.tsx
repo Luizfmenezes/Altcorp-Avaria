@@ -44,21 +44,21 @@ export function StatCard({ label, value, icon: Icon, hint, delta, variant = "whi
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-[28px] border border-ink-100/60 p-5 shadow-card transition-all duration-500 hover:-translate-y-1 hover:shadow-hero ${v.bg}`}
+      className={`group relative overflow-hidden rounded-[24px] border border-ink-100/60 p-4 shadow-card transition-all duration-500 hover:-translate-y-1 hover:shadow-hero sm:rounded-[28px] sm:p-5 ${v.bg}`}
     >
       {/* Decorative corner ring */}
       <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full border border-current opacity-10 transition-transform duration-700 group-hover:scale-125" />
       <div className="pointer-events-none absolute -bottom-16 -right-16 h-40 w-40 rounded-full border border-current opacity-5 transition-transform duration-700 group-hover:scale-110" />
 
       <div className="relative flex items-start justify-between">
-        <div className={`text-[10.5px] font-semibold uppercase tracking-[0.22em] ${v.sub}`}>{label}</div>
-        <div className={`flex h-9 w-9 items-center justify-center rounded-full ${v.chip} transition-transform duration-300 group-hover:rotate-12`}>
+        <div className={`text-[10px] font-semibold uppercase tracking-[0.22em] sm:text-[10.5px] ${v.sub}`}>{label}</div>
+        <div className={`flex h-8 w-8 items-center justify-center rounded-full ${v.chip} transition-transform duration-300 group-hover:rotate-12 sm:h-9 sm:w-9`}>
           <Icon size={15} strokeWidth={2.4} />
         </div>
       </div>
 
       <div className="relative mt-6 flex items-end justify-between gap-3">
-        <div className={`stat-num text-[44px] font-medium leading-none ${v.text}`}>
+        <div className={`stat-num text-[36px] font-medium leading-none sm:text-[44px] ${v.text}`}>
           {display}
         </div>
         {typeof delta === "number" && (
@@ -73,7 +73,7 @@ export function StatCard({ label, value, icon: Icon, hint, delta, variant = "whi
         )}
       </div>
 
-      {hint && <div className={`relative mt-2 text-[11.5px] ${v.sub}`}>{hint}</div>}
+      {hint && <div className={`relative mt-2 text-[11px] sm:text-[11.5px] ${v.sub}`}>{hint}</div>}
 
       {/* Bottom ticker line */}
       <div className="relative mt-4 h-px w-full overflow-hidden">

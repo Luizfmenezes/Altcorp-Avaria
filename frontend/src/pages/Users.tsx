@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Plus, ShieldCheck, Power, X, Users as UsersIcon, Mail } from "lucide-react";
-import { api } from "../api/client";
+import { Plus, ShieldCheck, Power, X, Users as UsersIcon } from "lucide-react";
+import { api, extractErrorMsg } from "../api/client";
 
 interface User {
   id: number;
@@ -34,7 +34,7 @@ export function Users() {
   }
 
   return (
-    <div className="mx-auto max-w-[1480px] space-y-8">
+    <div className="mx-auto max-w-[1480px] space-y-6 sm:space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="eyebrow">Acesso</div>
@@ -43,14 +43,14 @@ export function Users() {
             Operadores, gestores e inspetores. Apenas administradores podem criar contas.
           </p>
         </div>
-        <button onClick={() => setOpen(true)} className="btn-lime self-start">
+        <button onClick={() => setOpen(true)} className="btn-lime w-full self-start sm:w-auto">
           <Plus size={14} /> Novo usuário
         </button>
       </div>
 
-      <div className="grid gap-4 stagger md:grid-cols-3">
+      <div className="grid gap-4 stagger md:grid-cols-2 xl:grid-cols-3">
         {items.map((u) => (
-          <div key={u.id} className="group relative overflow-hidden rounded-[28px] border border-ink-100 bg-white p-6 shadow-card transition-all hover:-translate-y-1 hover:shadow-hero">
+          <div key={u.id} className="group relative overflow-hidden rounded-[28px] border border-ink-100 bg-white p-4 shadow-card transition-all hover:-translate-y-1 hover:shadow-hero sm:p-6">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-ink-900 font-display text-lg font-semibold text-lime-400">
@@ -58,8 +58,8 @@ export function Users() {
                 </div>
                 <div className="min-w-0">
                   <div className="truncate font-display text-[15px] font-semibold text-ink-900">{u.name}</div>
-                  <div className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-ink-500">
-                    <Mail size={10} /> {u.email}
+                  <div className="mt-0.5 inline-flex max-w-full items-center gap-1 break-all text-[11px] text-ink-500 sm:break-normal">
+                    <span className="font-mono text-[11px]">@</span> {u.email}
                   </div>
                 </div>
               </div>
@@ -67,7 +67,7 @@ export function Users() {
                 {u.is_active ? "Ativo" : "Inativo"}
               </span>
             </div>
-            <div className="mt-5 flex items-center justify-between border-t border-dashed border-ink-100 pt-4">
+            <div className="mt-5 flex flex-col items-start gap-3 border-t border-dashed border-ink-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-paper-100 px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-wider text-ink-700">
                 <ShieldCheck size={11} /> {ROLE_LABEL[u.role] ?? u.role}
               </span>
@@ -103,15 +103,15 @@ function UserModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => v
       await api.post("/api/v1/users", form);
       onSaved();
     } catch (err: any) {
-      setError(err?.response?.data?.detail ?? "Erro ao salvar");
+      setError(extractErrorMsg(err, "Erro ao salvar"));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/60 p-4 backdrop-blur-md animate-fade-in">
-      <form onSubmit={submit} className="w-full max-w-md overflow-hidden rounded-[28px] bg-white shadow-hero animate-scale-in">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink-900/60 p-0 backdrop-blur-md animate-fade-in sm:items-center sm:p-4">
+      <form onSubmit={submit} className="w-full max-w-md overflow-hidden rounded-t-[28px] bg-white shadow-hero animate-scale-in sm:rounded-[28px]">
         <div className="flex items-center justify-between border-b border-ink-100 bg-paper-50 px-6 py-4">
           <div>
             <div className="eyebrow">Cadastro</div>
@@ -121,14 +121,14 @@ function UserModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => v
             <X size={18} />
           </button>
         </div>
-        <div className="space-y-4 p-6">
+        <div className="max-h-[72vh] space-y-4 overflow-y-auto p-5 sm:max-h-none sm:p-6">
           <div>
             <label className="label-form">Nome completo</label>
             <input required className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
           <div>
-            <label className="label-form">E-mail</label>
-            <input required type="email" className="input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            <label className="label-form">Usuário</label>
+            <input required type="text" autoComplete="off" className="input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           </div>
           <div>
             <label className="label-form">Senha temporária</label>
@@ -148,9 +148,9 @@ function UserModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => v
             </div>
           )}
         </div>
-        <div className="flex justify-end gap-2 border-t border-ink-100 bg-paper-50 px-6 py-4">
-          <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>
-          <button disabled={loading} className="btn-primary">Criar usuário</button>
+        <div className="flex flex-col-reverse gap-2 border-t border-ink-100 bg-paper-50 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+          <button type="button" onClick={onClose} className="btn-secondary w-full sm:w-auto">Cancelar</button>
+          <button disabled={loading} className="btn-primary w-full sm:w-auto">Criar usuário</button>
         </div>
       </form>
     </div>
