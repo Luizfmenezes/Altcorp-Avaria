@@ -44,8 +44,8 @@ export function Login() {
       <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-lime-400/20 blur-3xl" />
       <div className="relative flex flex-1 flex-col justify-center px-6">
         <div className="mb-10 flex items-center gap-3 animate-fade-in">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-lime-400 text-ink-900">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-lime-400 text-ink-900 p-1.5">
+            <img src="/altcorp-logo.png" alt="Altcorp" className="h-full w-full object-contain brightness-0 invert" />
           </div>
           <div>
             <div className="font-display text-lg font-semibold tracking-tightest">Altcorp Vistorias</div>
