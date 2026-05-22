@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(npm install *)",
+      "PowerShell(& npm.cmd install three \"@react-three/fiber@^8\" \"@react-three/drei@^9\" --prefix \"C:\\\\Users\\\\Administrador\\\\Documents\\\\PROJETOS\\\\Altcorp-Avarias\\\\frontend\")",
+      "PowerShell(& npm.cmd install three@0.169.0 --prefix \"C:\\\\Users\\\\Administrador\\\\Documents\\\\PROJETOS\\\\Altcorp-Avarias\\\\frontend\")",
+      "PowerShell(& npm.cmd --prefix \"C:\\\\Users\\\\Administrador\\\\Documents\\\\PROJETOS\\\\Altcorp-Avarias\\\\frontend\" run build)",
+      "Bash(node *)",
+      "mcp__plugin_claude-mem_mcp-search__get_observations",
+      "mcp__plugin_context-mode_context-mode__ctx_batch_execute"
+    ]
+  }
+}
