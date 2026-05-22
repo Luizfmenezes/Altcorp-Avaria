@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
-import { Loader2, ArrowRight, Lock, User, ShieldCheck, Sparkles } from "lucide-react";
+import { Loader2, ArrowRight, Lock, User, Sparkles } from "lucide-react";
 import { api, extractErrorMsg } from "../api/client";
 import { useAuth } from "../stores/auth";
 
@@ -116,7 +116,7 @@ export function Login() {
         <div className="relative z-10 flex items-center justify-between text-[11px] text-paper-50/45">
           <span className="font-mono uppercase tracking-wider">© Altcorp · interno</span>
           <div className="flex items-center gap-2">
-            <ShieldCheck size={13} className="text-lime-400" />
+            <img src="/altcorp-logo.png" alt="Altcorp" className="h-4 w-4 object-contain brightness-0 invert" />
             <span>Conexão criptografada TLS 1.3</span>
           </div>
         </div>

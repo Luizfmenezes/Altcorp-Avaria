@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowUpFromLine, ArrowDownToLine, Inbox, LogOut, Shield, ChevronRight } from "lucide-react";
+import { ArrowUpFromLine, ArrowDownToLine, Inbox, LogOut, ChevronRight } from "lucide-react";
 import { NetworkBadge } from "../components/NetworkBadge";
 import { useAuth } from "../stores/auth";
 
@@ -12,8 +12,8 @@ export function Home() {
     <div className="flex min-h-screen flex-col bg-paper-50">
       <header className="flex items-center justify-between border-b border-ink-100 bg-white px-5 py-4">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink-900 text-lime-400">
-            <Shield size={16} />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink-900 p-1.5">
+            <img src="/altcorp-logo.png" alt="Altcorp" className="h-full w-full object-contain brightness-0 invert" />
           </div>
           <div>
             <div className="font-display text-sm font-semibold tracking-tightest text-ink-900">Altcorp</div>
