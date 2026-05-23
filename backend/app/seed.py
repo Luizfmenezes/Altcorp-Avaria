@@ -10,6 +10,9 @@ def run() -> None:
     Produção: nenhuma conta demo nem veículo de exemplo é inserido.
     O cadastro da frota é feito pela própria aplicação (import XLSX / formulário).
     """
+    if not settings.SEED_ADMIN_PASSWORD:
+        print("[seed] SEED_ADMIN_PASSWORD not set — skipping admin seed")
+        return
     db = SessionLocal()
     try:
         if not db.query(User).filter(User.email == settings.SEED_ADMIN_EMAIL).first():
