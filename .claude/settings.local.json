@@ -7,7 +7,9 @@
       "PowerShell(& npm.cmd --prefix \"C:\\\\Users\\\\Administrador\\\\Documents\\\\PROJETOS\\\\Altcorp-Avarias\\\\frontend\" run build)",
       "Bash(node *)",
       "mcp__plugin_claude-mem_mcp-search__get_observations",
-      "mcp__plugin_context-mode_context-mode__ctx_batch_execute"
+      "mcp__plugin_context-mode_context-mode__ctx_batch_execute",
+      "Bash(git remote *)",
+      "Bash(git push *)"
     ]
   }
 }
