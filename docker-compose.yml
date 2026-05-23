@@ -72,7 +72,7 @@ services:
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       MINIO_BUCKET: ${MINIO_BUCKET:-avarias-photos}
       MINIO_SECURE: "false"
-      MINIO_PUBLIC_URL: http://${HOST_IP:-localhost}:9000
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://${HOST_IP:-localhost}:9000}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://${HOST_IP:-localhost}:5173,http://${HOST_IP:-localhost}:5174,http://${HOST_IP:-localhost}:8080}
       SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@altcorp.com}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
