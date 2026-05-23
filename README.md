@@ -38,6 +38,8 @@ Stack:
    | `POSTGRES_PASSWORD` | Senha forte do Postgres |
    | `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` | Credenciais admin do MinIO |
    | `JWT_SECRET` | Gere com `openssl rand -hex 32` |
+   | `CORS_ORIGINS` | Inclua as origens reais do frontend, ex: `https://avaria.altcorphub.com` |
+   | `VITE_API_URL` | Em deploy com nginx/proxy reverso, use `/api` |
    | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | Conta admin criada na primeira subida |
    | `OLHOVIVO_TOKEN` | Token SPTrans (opcional, so pra rastreio de onibus) |
 
@@ -74,7 +76,12 @@ docker compose ps
 
 Se o frontend retornar `localhost` em vez do IP da VM:
 - Confirme que `HOST_IP` esta setado em `.env` antes do build.
+- Em deploy web/mobile atras do nginx, use `VITE_API_URL=/api`.
 - Rebuild forcado: `docker compose build --no-cache web mobile && docker compose up -d`.
+
+Se aparecer erro de CORS no login:
+- Confirme que `CORS_ORIGINS` contem o dominio publico usado no browser, por exemplo `https://avaria.altcorphub.com`.
+- Se o frontend estiver publicado no mesmo dominio do proxy, prefira `VITE_API_URL=/api` para evitar chamadas cross-origin ao backend.
 
 Se o MinIO recusar uploads:
 - Verifique que `MINIO_ROOT_PASSWORD` tem minimo 8 caracteres.

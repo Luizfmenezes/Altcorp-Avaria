@@ -1,7 +1,27 @@
 import axios from "axios";
 import { useAuth } from "../stores/auth";
 
-export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+function normalizeApiUrl(value?: string): string {
+  const configured = value?.trim();
+
+  if (configured) {
+    if (configured === "/api" || configured === "/api/") {
+      return globalThis.window?.location.origin ?? "";
+    }
+    return configured.replace(/\/api(?:\/v1)?\/?$/, "");
+  }
+
+  if (
+    globalThis.window !== undefined &&
+    !["localhost", "127.0.0.1"].includes(globalThis.window.location.hostname)
+  ) {
+    return globalThis.window.location.origin;
+  }
+
+  return "http://localhost:8000";
+}
+
+export const API_URL = normalizeApiUrl(import.meta.env.VITE_API_URL);
 
 export const api = axios.create({ baseURL: API_URL });
 
