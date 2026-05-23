@@ -73,7 +73,7 @@ services:
       MINIO_BUCKET: ${MINIO_BUCKET:-avarias-photos}
       MINIO_SECURE: "false"
       MINIO_PUBLIC_URL: http://${HOST_IP:-localhost}:9000
-      CORS_ORIGINS: http://${HOST_IP:-localhost}:5173,http://${HOST_IP:-localhost}:5174,http://${HOST_IP:-localhost}:8080
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://${HOST_IP:-localhost}:5173,http://${HOST_IP:-localhost}:5174,http://${HOST_IP:-localhost}:8080}
       SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@altcorp.com}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
       OLHOVIVO_TOKEN: ${OLHOVIVO_TOKEN:-}
@@ -90,7 +90,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: http://${HOST_IP:-localhost}:8000
+        VITE_API_URL: ${VITE_API_URL-}
     container_name: avarias_web
     restart: unless-stopped
     depends_on:
@@ -103,7 +103,7 @@ services:
       context: ./mobile
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: http://${HOST_IP:-localhost}:8000
+        VITE_API_URL: ${VITE_API_URL-}
     container_name: avarias_mobile
     restart: unless-stopped
     depends_on:
